@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# 환경변수 (절대 커밋 금지)
+.env
+*.env
+
+# DB / 벡터DB
+*.sqlite3
+chroma_db/
+*.db
+
+# 분석 결과 캐시
+analysis_results.json
+*.cache
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 로그
+*.log
+logs/
+
+.git
+node_modules

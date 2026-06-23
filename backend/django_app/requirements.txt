@@ -1,0 +1,9 @@
+django>=4.2
+djangorestframework
+django-cors-headers
+psycopg2-binary
+redis
+celery
+httpx
+pydantic>=2.0
+python-dotenv

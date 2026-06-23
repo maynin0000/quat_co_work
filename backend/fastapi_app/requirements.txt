@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+httpx
+openai
+chromadb
+pydantic>=2.0
+python-dotenv
+redis
+sse-starlette

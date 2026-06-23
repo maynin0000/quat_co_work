@@ -1,0 +1,80 @@
+version: "3.9"
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.django
+    ports:
+      - "8000:8000"
+    env_file: .env
+    volumes:
+      - ./backend/django_app:/app
+      - ./shared:/app/shared        # 공용 스키마 마운트
+    depends_on:
+      - postgres
+      - redis
+
+  fastapi:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.fastapi
+    ports:
+      - "8001:8001"
+    env_file: .env
+    volumes:
+      - ./backend/fastapi_app:/app
+      - ./shared:/app/shared        # 공용 스키마 마운트
+    depends_on:
+      - postgres
+      - redis
+      - chromadb
+
+  pipeline:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.pipeline
+    env_file: .env
+    volumes:
+      - ./data_pipeline:/app
+      - ./shared:/app/shared        # 공용 스키마 마운트
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB}
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8002:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - django
+      - fastapi
+
+volumes:
+  postgres_data:
+  chroma_data:
