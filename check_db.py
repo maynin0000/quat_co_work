@@ -1,23 +1,18 @@
 import chromadb
+import os
 
-def check_database():
-    # 로컬에서 접근하니까 아까 우리가 맞춘 포트(8002)로 접속
-    client = chromadb.HttpClient(host="127.0.0.1", port=8002)
-    
-    # 컬렉션 가져오기
-    collection = client.get_collection(name="paper_strategies")
-    
-    # 안에 있는 데이터 싹 다 가져오기
-    results = collection.get()
-    
-    print("\n✅ [ChromaDB 확인 결과]")
-    print(f"총 데이터 개수: {len(results['ids'])}개\n")
-    
-    for i in range(len(results['ids'])):
-        print(f"[{i+1}] ID: {results['ids'][i]}")
-        print(f"   본문: {results['documents'][i]}")
-        print(f"   메타데이터: {results['metadatas'][i]}\n")
-        print("-" * 50)
+DB_PATH = "./chroma_db" 
+print(f"🔍 탐색 경로: {os.path.abspath(DB_PATH)}")
 
-if __name__ == "__main__":
-    check_database()
+try:
+    client = chromadb.PersistentClient(path=DB_PATH)
+    collections = client.list_collections()
+    
+    print(f"\n📂 연결된 DB에 있는 컬렉션 목록 (총 {len(collections)}개):")
+    
+    for c in collections:
+        # 이 부분이 핵심입니다! 실제 저장된 컬렉션 이름들을 전부 출력해줍니다.
+        print(f"   👉 발견된 이름: '{c.name}'") 
+            
+except Exception as e:
+    print(f"\n🚨 에러 발생: {e}")

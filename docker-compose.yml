@@ -22,9 +22,15 @@ services:
     ports:
       - "8001:8001"
     env_file: .env
+    environment:
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: 8000
+      STRATEGY_BACKTEST_PATH: /workspace/data_pipeline/data/strategy_backtests.json
+      ETF_SNAPSHOT_PATH: /workspace/data_pipeline/data/etf_snapshot.json
     volumes:
-      - ./backend/fastapi_app:/app
-      - ./shared:/app/shared        # 공용 스키마 마운트
+      - ./backend:/workspace/backend
+      - ./shared:/workspace/shared
+      - ./data_pipeline/data:/workspace/data_pipeline/data:ro
     depends_on:
       - postgres
       - redis

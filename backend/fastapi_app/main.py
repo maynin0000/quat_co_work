@@ -12,9 +12,12 @@ load_dotenv()
 # 우리가 만든 모듈들 임포트
 from backend.fastapi_app.rag.embedder import QuantEmbedder
 from backend.fastapi_app.rag.retriever import ChromaVectorStore
-from backend.fastapi_app.services.financial_repo import MockFinancialRepo
+from backend.fastapi_app.services.financial_repo import get_financial_repo
 from backend.fastapi_app.services.recommender import QuantRecommender
-from backend.fastapi_app.routers import recommend
+from backend.fastapi_app.services.strategy_repo import StrategyBacktestRepo
+from backend.fastapi_app.services.etf_repo import EtfRepo
+from backend.fastapi_app.services.etf_recommender import EtfRecommender
+from backend.fastapi_app.routers import backtest, etf, recommend
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -30,8 +33,8 @@ async def lifespan(app: FastAPI):
     # 1. OpenAI 클라이언트 설정 (.env에서 안전하게 로드됨)
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
-        logger.error("🚨 OPENAI_API_KEY가 없습니다! .env 파일을 확인하세요.")
-        raise ValueError("Missing OpenAI API Key")
+        logger.warning("⚠ OPENAI_API_KEY 미설정 — LLM 호출은 실패할 수 있으나 서버는 기동합니다.")
+        api_key = "sk-not-configured"
     
     openai_client = AsyncOpenAI(
         api_key=api_key,
@@ -40,10 +43,13 @@ async def lifespan(app: FastAPI):
 
     # 2. RAG 컴포넌트 (Embedder, VectorStore)
     embedder = QuantEmbedder(openai_client)
-    vector_store = ChromaVectorStore(host="127.0.0.1", port=8002)
+    vector_store = ChromaVectorStore(
+        host=os.getenv("CHROMA_HOST", "127.0.0.1"),
+        port=int(os.getenv("CHROMA_PORT", "8002")),
+    )
 
     # 3. 데이터 Repo (Mock)
-    financial_repo = MockFinancialRepo()
+    financial_repo = get_financial_repo()
 
     # 4. 추천 엔진 (Recommender) 
     recommender = QuantRecommender(
@@ -58,6 +64,9 @@ async def lifespan(app: FastAPI):
     app.state.vector_store = vector_store
     app.state.financial_repo = financial_repo
     app.state.recommender = recommender
+    app.state.strategy_repo = StrategyBacktestRepo()
+    app.state.etf_repo = EtfRepo()
+    app.state.etf_recommender = EtfRecommender(app.state.etf_repo)
 
     logger.info("✅ [Lifespan] 모든 의존성 객체 초기화 및 바인딩 완료!")
     
@@ -84,8 +93,30 @@ app.add_middleware(
 
 # 라우터 등록
 app.include_router(recommend.router, prefix="/ai/recommend", tags=["Recommend"])
+app.include_router(backtest.router, prefix="/ai/backtest", tags=["Backtest"])
+app.include_router(etf.router, prefix="/ai/etf", tags=["ETF"])
 
 # 🚨 피드백 4번 반영: 기존 운영 확인용 헬스체크 원복
 @app.get("/ai/health", tags=["System"])
 async def health_check():
-    return {"status": "ok", "message": "Quant RAG API is running!"}
+    """시스템 및 주요 컴포넌트 연결 상태 확인."""
+    from fastapi import Request as _R  # noqa
+    chroma_ok = False
+    try:
+        # ChromaDB 핑: 컬렉션 count 호출
+        import asyncio as _a
+        cnt = await _a.to_thread(app.state.vector_store.paper_collection.count)
+        chroma_ok = True
+    except Exception:
+        cnt = None
+    openai_ok = hasattr(app.state, "openai_client")
+    return {
+        "status": "ok",
+        "message": "Quant RAG API is running!",
+        "components": {
+            "openai": "connected" if openai_ok else "down",
+            "chromadb": "connected" if chroma_ok else "down",
+            "paper_count": cnt,
+            "financial_repo": type(app.state.financial_repo).__name__,
+        },
+    }

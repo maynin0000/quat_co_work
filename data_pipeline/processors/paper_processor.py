@@ -3,6 +3,7 @@ import json
 from typing import List, Dict, Any
 from shared.schemas.paper import ExtractedStrategy
 from shared.utils.validators import validate_paper_strategies
+from shared.utils.model_config import OPENAI_PIPELINE_MODEL
 from backend.fastapi_app.rag.embedder import QuantEmbedder
 from backend.fastapi_app.rag.retriever import ChromaVectorStore
 
@@ -60,7 +61,7 @@ class PaperProcessor:
         try:
             # 1. LLM 전략 추출
             response = await self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=OPENAI_PIPELINE_MODEL,
                 response_format={"type": "json_object"},
                 messages=[
                     {"role": "system", "content": system_prompt},

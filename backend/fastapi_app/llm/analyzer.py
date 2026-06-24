@@ -1,6 +1,7 @@
 import logging
 from pydantic import BaseModel, Field
 from typing import List
+from shared.utils.model_config import OPENAI_CHAT_MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ class QueryAnalyzer:
         try:
             # OpenAI의 Structured Output(beta.chat.completions.parse) 사용
             response = await self.client.beta.chat.completions.parse(
-                model="gpt-4o-mini",
+                model=OPENAI_CHAT_MODEL,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_input}

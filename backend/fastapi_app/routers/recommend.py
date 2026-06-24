@@ -38,7 +38,7 @@ async def recommend_stream_generator(request: Request, user_req: RecommendationR
         recommendations = await recommender.generate_recommendation(
             user_query=user_req.user_input,
             query_embedding=embedding_vector,
-            top_n=5
+            top_n=user_req.top_n
         )
 
         # 상태 3: 최종 포장

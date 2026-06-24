@@ -1,7 +1,8 @@
 FROM python:3.11-slim
-WORKDIR /app
+WORKDIR /workspace
 COPY backend/fastapi_app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY backend/fastapi_app/ .
+COPY backend/ ./backend/
 COPY shared/ ./shared/
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
+COPY data_pipeline/data/ ./data_pipeline/data/
+CMD ["uvicorn", "backend.fastapi_app.main:app", "--host", "0.0.0.0", "--port", "8001"]

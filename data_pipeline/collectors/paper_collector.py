@@ -1,6 +1,6 @@
 import httpx
 import logging
-# import xmltodict # KCI XML 파싱용 (pip install xmltodict 필요)
+import hashlib
 from typing import List, Dict, Any
 import xml.etree.ElementTree as ET
 
@@ -14,6 +14,9 @@ class KciCollector:
 
     async def search_quant_papers(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:
         """KCI API를 통해 국문 퀀트/재무 논문 메타데이터와 초록 수집"""
+        if limit <= 0:
+            return []
+
         params = {
             "apiCode": "articleSearch",
             "key": self.api_key,
@@ -34,27 +37,32 @@ class KciCollector:
                 for record in root.findall('.//record'):
                     # 논문 고유 ID 추출 (<articleInfo article-id="...">)
                     article_info = record.find('.//articleInfo')
-                    paper_id = article_info.get('article-id') if article_info is not None else "unknown_id"
+                    paper_id = article_info.get('article-id') if article_info is not None else None
                     
                     # 제목 추출 (<article-title>)
                     title_elem = record.find('.//article-title')
-                    title = title_elem.text if title_elem is not None else "제목 없음"
+                    title = "".join(title_elem.itertext()).strip() if title_elem is not None else "제목 없음"
                     
                     # 초록 추출 (<abstract>)
                     abstract_elem = record.find('.//abstract')
-                    abstract = abstract_elem.text if abstract_elem is not None else ""
+                    abstract = "".join(abstract_elem.itertext()).strip() if abstract_elem is not None else ""
                     
                     # 3. 초록이 존재하는 '진짜' 논문만 리스트에 담기
-                    if abstract and abstract.strip():
+                    if abstract:
+                        if not paper_id:
+                            digest = hashlib.sha1(
+                                f"{title}\n{abstract}".encode("utf-8")
+                            ).hexdigest()[:20]
+                            paper_id = f"kci_hash_{digest}"
                         papers.append({
                             "paper_id": paper_id,
                             "title": title,
-                            "abstract": abstract.strip()
+                            "abstract": abstract
                         })
                 
                 logger.info(f"✅ [KCI Collector] '{query}' 검색 완료 (실제 논문 {len(papers)}건 파싱 성공)")
                 return papers
 
-            except httpx.HTTPError as e:
+            except (httpx.HTTPError, ET.ParseError) as e:
                 logger.error(f"🚨 [KCI Collector Error] KCI API 호출 실패: {e}")
                 return []

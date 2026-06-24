@@ -25,6 +25,7 @@ class FinancialRawData(BaseModel):
     per             : Optional[float]       = None
     psr             : Optional[float]       = None
     ev_ebitda       : Optional[float]       = None
+    fcf_yield       : Optional[float]       = None
 
     # 퀄리티 팩터
     roe             : Optional[float]       = None
@@ -32,6 +33,8 @@ class FinancialRawData(BaseModel):
     debt_ratio      : Optional[float]       = None
     current_ratio   : Optional[float]       = None
     op_margin       : Optional[float]       = None
+    operating_cash_flow: Optional[float]    = None
+    free_cash_flow  : Optional[float]       = None
 
     # 성장 팩터
     revenue_growth  : Optional[float]       = None
@@ -65,8 +68,9 @@ class FinancialRawData(BaseModel):
         return v
 
     @validator(
-        "pbr", "per", "psr", "ev_ebitda",
+        "pbr", "per", "psr", "ev_ebitda", "fcf_yield",
         "roe", "roa", "debt_ratio", "current_ratio", "op_margin",
+        "operating_cash_flow", "free_cash_flow",
         "revenue_growth", "profit_growth", "op_growth",
         "momentum_1m", "momentum_3m", "momentum_6m", "momentum_1y",
         "volatility", "dividend_yield", "dividend_growth",
@@ -108,7 +112,8 @@ class FinancialRawData(BaseModel):
     def compute_completeness(self) -> float:
         key_fields = [
             "pbr", "per", "roe", "debt_ratio", "op_margin",
-            "revenue_growth", "momentum_1y", "dividend_yield", "market_cap"
+            "revenue_growth", "momentum_1y", "dividend_yield", "market_cap",
+            "fcf_yield", "operating_cash_flow"
         ]
         filled = sum(1 for f in key_fields if getattr(self, f) is not None)
         return round(filled / len(key_fields) * 100, 1)

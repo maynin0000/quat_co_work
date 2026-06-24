@@ -1,6 +1,7 @@
 import logging
 from typing import List
 from openai import AsyncOpenAI
+from shared.utils.model_config import OPENAI_EMBEDDING_MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +13,7 @@ class QuantEmbedder:
         Connection Pool 낭비를 막는 완벽한 DI(Dependency Injection) 패턴.
         """
         self.client = client
-        self.model = "text-embedding-3-small"
+        self.model = OPENAI_EMBEDDING_MODEL
 
     async def get_embedding(self, text: str) -> List[float]:
         """단일 텍스트를 벡터로 변환"""

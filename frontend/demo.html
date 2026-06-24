@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantra — 근거로 고르는 투자</title>
+<style>
+  :root{
+    --ink:#102038;
+    --paper:#f4f8fc;
+    --paper-2:#e7f0fb;
+    --line:#cddbf0;
+    --moss:#4f8ee8;
+    --moss-d:#2f6ecf;
+    --amber:#73b5ff;
+    --rose:#db5f6f;
+    --muted:#647089;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:"Pretendard","Segoe UI",-apple-system,sans-serif;background:linear-gradient(180deg,#fbfdff 0%,#f3f7fc 100%);color:var(--ink);line-height:1.48;-webkit-font-smoothing:antialiased}
+  body::before{content:"";position:fixed;inset:0;background-image:linear-gradient(rgba(205,219,240,.35) 1px,transparent 1px),linear-gradient(90deg,rgba(205,219,240,.28) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,0));pointer-events:none}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+  header{padding:30px 0 22px;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:baseline;gap:12px}
+  .logo{font-family:"Georgia",serif;font-size:28px;font-weight:700;letter-spacing:-.4px;color:var(--moss-d)}
+  .logo b{color:var(--amber)}
+  .tag{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+  .lede{margin-top:14px;font-family:"Pretendard","Segoe UI",-apple-system,sans-serif;font-size:20px;line-height:1.45;color:var(--ink);max-width:720px;font-weight:500}
+  .lede em{color:var(--moss-d);font-style:normal;border-bottom:1px solid rgba(47,110,207,.35)}
+
+  .conn{display:inline-flex;align-items:center;gap:7px;margin-top:14px;font-size:12px;color:var(--muted);padding:5px 11px;background:rgba(231,240,251,.8);border:1px solid var(--line);border-radius:20px}
+  .dot{width:7px;height:7px;border-radius:50%;background:#b9b3a3}
+  .dot.live{background:var(--moss);box-shadow:0 0 0 3px rgba(47,107,79,.18)}
+  .dot.mock{background:var(--amber);box-shadow:0 0 0 3px rgba(196,122,44,.18)}
+
+  .ask{margin:24px 0 8px}
+  .mode-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .mode-tab{padding:8px 13px;border:1px solid var(--line);border-radius:16px;background:rgba(231,240,251,.85);color:var(--muted);cursor:pointer;font-family:inherit;font-size:13px}
+  .mode-tab.active{background:linear-gradient(135deg,var(--moss-d),var(--moss));border-color:transparent;color:#fff;box-shadow:0 6px 14px rgba(47,110,207,.16)}
+  .ask label{display:block;font-size:13px;color:var(--muted);margin-bottom:9px}
+  .field{display:flex;gap:10px;flex-wrap:wrap}
+  .field input{flex:1;min-width:240px;padding:14px 16px;font-size:15px;border:1.5px solid var(--line);border-radius:12px;background:rgba(255,255,255,.96);color:var(--ink);font-family:inherit;box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+  .field input:focus{outline:none;border-color:var(--moss)}
+  .field button{padding:14px 22px;font-size:14px;font-weight:600;border:none;border-radius:12px;background:linear-gradient(135deg,var(--moss-d),var(--moss));color:#fff;cursor:pointer;font-family:inherit;transition:transform .15s,box-shadow .15s}
+  .field button:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(47,110,207,.2)}
+  .field button:disabled{opacity:.5;cursor:not-allowed}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .chip{font-size:12px;padding:7px 12px;border-radius:16px;cursor:pointer;background:rgba(231,240,251,.92);border:1px solid var(--line);color:var(--muted);transition:.15s}
+  .chip:hover{background:linear-gradient(135deg,var(--moss-d),var(--moss));color:#fff;border-color:transparent}
+
+  /* 진행 로그 - 백엔드 실제 status 메시지 */
+  .stream{margin:24px 0;display:none;background:rgba(255,255,255,.98);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:0 10px 28px rgba(16,32,56,.05)}
+  .stream.on{display:block}
+  .slog{display:flex;align-items:center;gap:11px;padding:7px 0;font-size:13.5px;color:var(--muted);opacity:0;animation:fade .3s forwards}
+  @keyframes fade{to{opacity:1}}
+  .slog .ic{width:18px;height:18px;flex-shrink:0;display:grid;place-items:center}
+  .slog.done .ic{color:var(--moss)}
+  .slog.cur{color:var(--ink)}
+  .spin{width:12px;height:12px;border:2px solid var(--moss);border-top-color:transparent;border-radius:50%;animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  .results{margin:12px 0 56px}
+  .card{background:rgba(255,255,255,.98);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:16px;opacity:0;transform:translateY(14px);animation:rise .5s ease forwards;box-shadow:0 8px 22px rgba(16,32,56,.04)}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  .stock{display:flex;align-items:baseline;gap:10px}
+  .stock .nm{font-size:19px;font-weight:700;color:var(--ink)}
+  .stock .tk{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  .fit{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  .fit span{font-size:11px;padding:4px 9px;border-radius:12px;background:rgba(79,142,232,.08);color:var(--moss-d);border:1px solid rgba(79,142,232,.16)}
+
+  .score{text-align:right;flex-shrink:0}
+  .score .num{font-family:"Georgia",serif;font-size:32px;font-weight:700;line-height:1;color:var(--moss)}
+  .score .lab{font-size:11px;color:var(--muted);margin-top:3px}
+  .gauge{width:96px;height:5px;background:var(--paper-2);border-radius:3px;margin-top:8px;overflow:hidden}
+  .gauge i{display:block;height:100%;background:linear-gradient(90deg,#9fd0ff,var(--moss));border-radius:3px;width:0;transition:width .9s ease}
+
+  .why{margin-top:16px;display:grid;gap:10px}
+  .why-row{display:grid;grid-template-columns:88px 1fr;gap:12px;align-items:start}
+  .why-row .k{font-size:11px;color:#5f8fdc;font-weight:700;padding-top:1px;text-transform:uppercase;letter-spacing:.05em}
+  .why-row .v{font-size:13px;color:var(--ink);line-height:1.55}
+  .why-row .v b{color:var(--moss-d)}
+
+  /* 교차검증 정량 테이블 - 차별점 */
+  .matches{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
+  .matches .mh{font-size:12px;color:var(--muted);margin-bottom:9px}
+  .mrow{display:flex;align-items:center;gap:10px;padding:4px 0;font-size:12.5px}
+  .mrow .mf{width:128px;font-weight:600;color:var(--ink)}
+  .mrow .mc{color:var(--muted);font-variant-numeric:tabular-nums}
+  .mrow .mv{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--moss-d);font-weight:600}
+  .mrow .ok{color:var(--moss)}
+
+  .summary{margin-top:14px;padding:12px 14px;background:var(--paper-2);border-left:3px solid var(--moss);border-radius:0 8px 8px 0;font-size:13px;color:var(--ink)}
+  .risk{margin-top:13px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .risk .rl{font-size:11.5px;color:var(--rose);font-weight:600}
+  .risk span{font-size:11.5px;padding:4px 10px;border-radius:13px;background:rgba(219,95,111,.08);color:var(--rose);border:1px solid rgba(219,95,111,.2)}
+  .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:16px}
+  .metric{padding:11px;background:rgba(231,240,251,.84);border-radius:10px;border:1px solid rgba(205,219,240,.8)}
+  .metric .mk{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .metric .mv{font-family:"Georgia",serif;font-size:18px;color:var(--moss-d);margin-top:4px}
+  .holdings{margin-top:12px;font-size:12px;color:var(--muted)}
+  .holdings b{color:var(--ink)}
+  .method{margin:16px 0;padding:11px 13px;border-radius:10px;background:var(--paper-2);font-size:12px;color:var(--muted)}
+  .detail-btn{margin-top:14px;padding:9px 14px;border:1px solid var(--moss);border-radius:9px;background:transparent;color:var(--moss-d);font-weight:600;cursor:pointer;font-family:inherit}
+  .detail-btn:hover{background:linear-gradient(135deg,var(--moss-d),var(--moss));color:#fff}
+  .detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin:14px 0 18px}
+  .back-btn{border:0;background:none;color:var(--moss-d);font-weight:600;cursor:pointer;padding:4px 0;font-family:inherit}
+  .detail-title{font-family:"Pretendard","Segoe UI",-apple-system,sans-serif;font-size:26px;line-height:1.3;margin-top:8px;font-weight:700;letter-spacing:-.02em}
+  .detail-section{background:rgba(255,255,255,.98);border:1px solid var(--line);border-radius:12px;padding:18px;margin:14px 0;box-shadow:0 8px 22px rgba(16,32,56,.04)}
+  .detail-section h3{font-size:13px;margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--moss-d)}
+  .chart-wrap{position:relative;height:260px;background:linear-gradient(180deg,#fff 0%,#f7fbff 100%);border:1px solid var(--line);border-radius:10px;padding:8px}
+  .chart-wrap.drawdown{height:180px}
+  .chart-wrap canvas{width:100%;height:100%;display:block}
+  .chart-legend{display:flex;gap:18px;font-size:11.5px;color:var(--muted);margin:0 0 10px}
+  .legend-line{display:inline-block;width:20px;height:2px;vertical-align:middle;margin-right:6px}
+  .legend-line.strategy{background:var(--moss)}
+  .legend-line.benchmark{background:#90a0b9}
+  .allocation{display:grid;gap:9px}
+  .allocation-row{display:grid;grid-template-columns:minmax(150px,1fr) 2fr 52px;gap:10px;align-items:center;font-size:12.5px}
+  .allocation-bar{height:8px;background:var(--paper-2);border-radius:5px;overflow:hidden}
+  .allocation-bar i{display:block;height:100%;background:linear-gradient(90deg,#b7ddff,var(--moss));border-radius:5px}
+  .evidence-list{display:grid;gap:10px}
+  .evidence-item{padding:12px;background:var(--paper-2);border-radius:8px}
+  .evidence-item b{display:block;font-size:12px;margin-bottom:4px}
+  .evidence-item p{font-size:11.5px;color:var(--muted)}
+  .detail-copy{font-size:12.5px;color:var(--muted);line-height:1.65}
+  .return-table{width:100%;border-collapse:collapse;font-size:12.5px}
+  .return-table th,.return-table td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right}
+  .return-table th:first-child,.return-table td:first-child{text-align:left}
+  .return-table .positive{color:var(--moss-d)}
+  .return-table .negative{color:var(--rose)}
+  @media(max-width:720px){.metrics{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:620px){
+    .wrap{padding:0 16px}
+    header{padding:24px 0 18px}
+    .lede{font-size:18px}
+    .card{padding:18px}
+    .detail-section{padding:16px}
+    .detail-title{font-size:23px}
+    .metrics{grid-template-columns:repeat(2,1fr)}
+  }
+
+  .foot{padding:24px 0 50px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+  .empty{padding:50px 0;text-align:center;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="logo">Quant<b>ra</b></div>
+      <div class="tag">근거로 고르는 투자</div>
+    </div>
+    <p class="lede">주식 용어를 몰라도 괜찮아요.<br>말하는 대로 <em>논문과 재무 데이터</em>로 검증해 드릴게요.</p>
+    <div class="conn"><span class="dot" id="dot"></span><span id="connTxt">연결 확인 중…</span></div>
+  </header>
+
+  <div class="ask">
+    <div class="mode-tabs">
+      <button class="mode-tab active" data-mode="stock">종목 찾기</button>
+      <button class="mode-tab" data-mode="etf">ETF 찾기</button>
+      <button class="mode-tab" data-mode="strategy">주식 전략</button>
+      <button class="mode-tab" data-mode="etf_strategy">ETF 전략</button>
+    </div>
+    <label for="q" id="askLabel">어떤 주식을 찾고 있나요?</label>
+    <div class="field">
+      <input id="q" placeholder="예: 배당 많이 주는 안정적인 주식 찾아줘" autocomplete="off">
+      <button id="go">분석하기</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="stream" id="stream"></div>
+
+  <div class="results" id="results">
+    <div class="empty" id="empty">질문을 입력하면 근거와 함께 종목을 추천해 드려요.</div>
+  </div>
+
+  <div class="foot">Quantra · 정보 제공 및 시뮬레이션 목적 · 투자 판단의 책임은 본인에게 있습니다</div>
+</div>
+
+<script>
+const API = "http://localhost:8001";
+const examples = [
+  "배당 많이 주는 안정적인 주식 찾아줘",
+  "저평가된 가치주 찾아줘",
+  "부채 적고 안정적인 우량주",
+];
+const strategyExamples = [
+  "하락장에서 안정적인 전략 추천해줘",
+  "상승 추세를 따라가는 전략",
+  "수익과 위험을 함께 고려한 전략",
+];
+const etfExamples = [
+  "안정적인 ETF 추천해줘",
+  "미국 성장주 ETF 찾아줘",
+  "거래량 많고 괴리율 낮은 ETF",
+  "반도체 ETF 찾아줘",
+  "2차전지 ETF 찾아줘",
+  "AI ETF 찾아줘",
+  "배당 ETF 찾아줘",
+  "채권 ETF 찾아줘",
+];
+const etfStrategyExamples = [
+  "ETF로 안정적인 자산배분 전략",
+  "미국주식과 채권을 섞은 전략",
+  "ETF 모멘텀 로테이션 전략",
+];
+
+let LIVE = false;
+let MODE = "stock";
+let LAST_STRATEGY_PAYLOAD = null;
+let LAST_STRATEGY_TYPE = "stock";
+let CURRENT_DETAIL = null;
+async function checkConn(){
+  try{
+    const r = await fetch(API+"/ai/health",{signal:AbortSignal.timeout(1500)});
+    if(r.ok){ LIVE=true; setConn("live","FastAPI 연결됨 · 실시간 분석"); return; }
+  }catch(e){}
+  LIVE=false; setConn("mock","데모 모드 · 샘플 데이터로 시연");
+}
+function setConn(cls,txt){
+  document.getElementById("dot").className="dot "+cls;
+  document.getElementById("connTxt").textContent=txt;
+}
+
+const chips=document.getElementById("chips");
+function renderChips(items){
+  chips.innerHTML="";
+  items.forEach(t=>{
+  const c=document.createElement("div");
+  c.className="chip"; c.textContent=t;
+  c.onclick=()=>{document.getElementById("q").value=t; run();};
+  chips.appendChild(c);
+  });
+}
+renderChips(examples);
+
+document.querySelectorAll(".mode-tab").forEach(button=>{
+  button.onclick=()=>{
+    if(location.hash.startsWith("#strategy=")){
+      history.replaceState(null,"",location.pathname+location.search);
+    }
+    MODE=button.dataset.mode;
+    document.querySelectorAll(".mode-tab").forEach(tab=>tab.classList.toggle("active",tab===button));
+    const strategy=MODE==="strategy"||MODE==="etf_strategy";
+    const etf=MODE==="etf";
+    document.getElementById("askLabel").textContent=strategy?"어떤 투자 전략을 찾고 있나요?":etf?"어떤 ETF를 찾고 있나요?":"어떤 주식을 찾고 있나요?";
+    document.getElementById("q").placeholder=strategy?"예: 하락장에서 안정적인 전략 추천해줘":etf?"예: 미국 성장주 ETF 찾아줘":"예: 배당 많이 주는 안정적인 주식 찾아줘";
+    document.getElementById("q").value="";
+    document.getElementById("results").innerHTML='<div class="empty">'+(strategy?"질문에 맞는 전략과 실제 백테스트 성과를 보여드려요.":"질문을 입력하면 근거와 함께 종목을 추천해 드려요.")+'</div>';
+    renderChips(MODE==="etf"?etfExamples:MODE==="etf_strategy"?etfStrategyExamples:strategy?strategyExamples:examples);
+  };
+});
+
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const streamBox=document.getElementById("stream");
+
+function pushLog(msg){
+  // 이전 줄들 done 처리
+  streamBox.querySelectorAll(".slog.cur").forEach(el=>{
+    el.classList.remove("cur"); el.classList.add("done");
+    el.querySelector(".ic").innerHTML="✓";
+  });
+  const row=document.createElement("div");
+  row.className="slog cur";
+  const icon=document.createElement("span");
+  icon.className="ic";
+  icon.innerHTML='<span class="spin"></span>';
+  const text=document.createElement("span");
+  text.textContent=msg;
+  row.append(icon,text);
+  streamBox.appendChild(row);
+}
+function finishLogs(){
+  streamBox.querySelectorAll(".slog.cur").forEach(el=>{
+    el.classList.remove("cur"); el.classList.add("done");
+    el.querySelector(".ic").innerHTML="✓";
+  });
+}
+
+const goBtn=document.getElementById("go");
+goBtn.onclick=run;
+document.getElementById("q").addEventListener("keydown",e=>{if(e.key==="Enter")run();});
+
+async function run(){
+  const q=document.getElementById("q").value.trim();
+  if(!q) return;
+  goBtn.disabled=true;
+  document.getElementById("empty")?.remove();
+  document.getElementById("results").innerHTML="";
+  streamBox.innerHTML="";
+  streamBox.classList.add("on");
+
+  let data=[];
+  if(MODE==="strategy"||MODE==="etf_strategy"){
+    const payload=await runStrategy(q,MODE==="etf_strategy"?"etf":"stock");
+    finishLogs();
+    await sleep(150);
+    streamBox.classList.remove("on");
+    renderStrategies(payload);
+    goBtn.disabled=false;
+    return;
+  }
+  if(MODE==="etf"){
+    const payload=await runEtf(q);
+    finishLogs();
+    await sleep(150);
+    streamBox.classList.remove("on");
+    renderEtfs(payload);
+    goBtn.disabled=false;
+    return;
+  }
+  if(LIVE){
+    data = await runLive(q);
+    if(!data || !data.length){
+      // 라이브가 0건이거나 에러면 Mock으로 안전 폴백
+      pushLog("결과 보강 중…");
+      await sleep(400);
+      data = await runMock(q);
+    }
+  }else{
+    data = await runMock(q);
+  }
+
+  finishLogs();
+  await sleep(250);
+  streamBox.classList.remove("on");
+  render(data);
+  goBtn.disabled=false;
+}
+
+async function runStrategy(q,assetType){
+  pushLog("질문과 전략 성격 매칭 중…");
+  try{
+    const res=await fetch(API+"/ai/backtest/strategies?limit=3&asset_type="+assetType+"&query="+encodeURIComponent(q));
+    if(!res.ok) throw new Error("strategy api");
+    const payload=await res.json();
+    LAST_STRATEGY_PAYLOAD=payload;
+    LAST_STRATEGY_TYPE=assetType;
+    pushLog("백테스트 성과와 위험 지표 비교 중…");
+    return payload;
+  }catch(e){
+    return {strategies:[],methodology:"백테스트 데이터를 불러오지 못했습니다."};
+  }
+}
+async function runEtf(q){
+  pushLog("ETF 수익률·위험·유동성 분석 중…");
+  try{
+    const res=await fetch(API+"/ai/etf/recommend?limit=5&query="+encodeURIComponent(q));
+    if(!res.ok) throw new Error("etf api");
+    const payload=await res.json();
+    pushLog("NAV 괴리율과 위험조정 성과 비교 중…");
+    return payload;
+  }catch(e){
+    return {etfs:[],limitations:["ETF 데이터를 불러오지 못했습니다."]};
+  }
+}
+
+// ── 진짜 SSE 연결 ──
+async function runLive(q){
+  try{
+    const res = await fetch(API+"/ai/recommend/stream",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({user_input:q, risk_level:"medium", top_n:5}),
+    });
+    if(!res.ok || !res.body) return [];
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer="", finalData=[];
+
+    while(true){
+      const {value,done} = await reader.read();
+      if(done) break;
+      buffer += decoder.decode(value,{stream:true});
+      // SSE: "data: {...}\n\n" 단위로 파싱
+      let parts = buffer.split("\n\n");
+      buffer = parts.pop();
+      for(const part of parts){
+        const line = part.trim();
+        if(!line.startsWith("data:")) continue;
+        const jsonStr = line.slice(5).trim();
+        if(!jsonStr) continue;
+        let obj;
+        try{ obj=JSON.parse(jsonStr); }catch(e){ continue; }
+
+        if(obj.status==="processing"){
+          pushLog(obj.message || "처리 중…");
+        }else if(obj.status==="complete"){
+          finalData = obj.data || [];
+        }else if(obj.status==="error"){
+          pushLog("⚠ "+(obj.message||"오류"));
+          return [];
+        }
+      }
+    }
+    return finalData;
+  }catch(e){
+    return [];
+  }
+}
+
+// ── Mock (안전망) ──
+async function runMock(q){
+  const steps=["질문 의도 파악 및 벡터 변환 중…","RAG 논문 DB · 재무 DB 교차 검색 중…","교차 검증 및 신뢰도 계산 중…"];
+  for(const s of steps){ pushLog(s); await sleep(s.includes("교차 검색")?850:550); }
+  return mockData(q);
+}
+
+function mockData(q){
+  const isGrowth=/성장|크는|테슬라|빠르/.test(q);
+  const isDiv=/배당|안정|안전|부채|우량/.test(q);
+  if(isGrowth){
+    return [
+      mk("에코프로비엠","247540",91,84,["고성장 모멘텀","2차전지 밸류체인"],
+        "2차전지 양극재 수요 성장 논문에서 매출성장률 상위군의 초과수익이 확인됨.",
+        "현재 매출성장률 38%, 영업이익률 11%로 고성장 조건 충족.",
+        "고성장 팩터 조건 3개 중 3개 충족. 변동성 지표만 주의.",
+        "빠르게 크는 성장주 조건에 부합하지만 가격 변동이 큰 점은 감안하세요.",
+        ["높은 주가 변동성","2차전지 업황 사이클"],
+        [{factor:"매출성장률",cond:"> 20%",val:38,ok:true},{factor:"영업이익률",cond:"> 8%",val:11,ok:true}]),
+      mk("HLB","028300",78,71,["바이오 성장","신약 모멘텀"],
+        "신약 파이프라인 가치평가 논문 기준 임상 진입 기업의 기대수익 구간에 해당.",
+        "R&D 비중과 파이프라인 진행도가 높음.",
+        "성장 잠재력 높으나 재무 안정성은 낮아 신뢰도 중간.",
+        "고위험·고성장 종목입니다. 변동성을 감내할 수 있을 때 고려하세요.",
+        ["임상 결과 불확실성","적자 지속 가능성"],
+        [{factor:"R&D집중도",cond:"높음",val:"-",ok:true}]),
+    ];
+  }
+  if(isDiv){
+    return [
+      mk("신한지주","055550",90,88,["고배당 금융주","저PBR"],
+        "한국 배당주 연구에서 배당수익률 3% 이상 저평가 금융주의 KOSPI 대비 초과수익이 확인됨.",
+        "현재 배당수익률 6.5%, PBR 0.4로 고배당·저평가 동시 충족.",
+        "논문 조건 중 배당·가치 2개 충족. 부채비율은 금융업 특성상 별도 해석.",
+        "배당을 많이 주면서 자산 대비 저평가된 대표적 금융주입니다.",
+        ["금리 변동 영향","금융 규제 환경"],
+        [{factor:"배당수익률",cond:"> 3.0%",val:6.5,ok:true},{factor:"PBR",cond:"< 1.0",val:0.4,ok:true}]),
+      mk("현대차","005380",85,86,["저PBR 가치주","고배당"],
+        "저PBR 가치 전략 연구에서 PBR 1.0 미만 + ROE 8% 이상 종목군의 연 8.2% 초과수익 확인.",
+        "현재 PBR 0.7, ROE 12.2%, 배당수익률 5.1%로 가치+배당 조건 충족.",
+        "논문의 가치주 조건과 거의 일치. 재무 충족도 높음.",
+        "저평가에 수익성·배당까지 받쳐주는 안전마진 있는 대형주입니다.",
+        ["글로벌 자동차 수요 둔화","환율 변동"],
+        [{factor:"PBR",cond:"< 1.0",val:0.7,ok:true},{factor:"ROE",cond:"> 10%",val:12.2,ok:true},{factor:"배당수익률",cond:"> 3.0%",val:5.1,ok:true}]),
+    ];
+  }
+  return [
+    mk("현대차","005380",85,86,["저PBR 가치주","실적 개선"],
+      "저PBR 가치 전략 연구에서 PBR 1.0 미만 + ROE 8% 이상 종목군의 연 8.2% 초과수익 확인.",
+      "현재 PBR 0.7, ROE 12.2%로 가치+퀄리티 조건 동시 충족.",
+      "논문의 가치주 조건과 거의 일치. 재무 충족도 높음.",
+      "자산 대비 저평가되어 있으면서 수익성도 받쳐주는 안전마진 있는 종목입니다.",
+      ["글로벌 자동차 수요 둔화","환율 변동"],
+      [{factor:"PBR",cond:"< 1.0",val:0.7,ok:true},{factor:"ROE",cond:"> 10%",val:12.2,ok:true}]),
+    mk("신한지주","055550",82,83,["저평가 금융주","고배당"],
+      "대형 가치주의 평균회귀 효과를 다룬 연구에서 저평가 구간 매수의 유효성 입증.",
+      "PBR 0.4, 배당수익률 6.5%로 저평가+고배당.",
+      "가치 조건 충족, 배당 매력까지 더해져 신뢰도 양호.",
+      "저평가에 높은 배당까지 챙길 수 있는 금융 대형주입니다.",
+      ["금리 변동 영향","대손 비용 변동"],
+      [{factor:"PBR",cond:"< 1.0",val:0.4,ok:true},{factor:"배당수익률",cond:"> 3.0%",val:6.5,ok:true}]),
+  ];
+}
+
+// Mock 헬퍼 → 백엔드 RecommendationResult와 동일 구조
+function mk(name,ticker,rec,conf,fit,paper,status,match,summary,risks,matchRows){
+  return {
+    name,ticker,recommendation_score:rec,confidence_score:conf,
+    matched_strategies:fit,
+    why_this_stock:{paper_basis:paper,current_status:status,match_summary:match},
+    match_results:(matchRows||[]).map(m=>({factor:m.factor,paper_condition:m.cond,stock_value:m.val,is_match:m.ok,gap:0})),
+    simple_summary:summary,risk_factors:risks,evidence:[]
+  };
+}
+
+// ── 렌더 ──
+function render(list){
+  const box=document.getElementById("results");
+  box.innerHTML="";
+  if(!list||!list.length){
+    box.innerHTML='<div class="empty">조건에 맞는 종목을 찾지 못했어요. 다르게 질문해 보세요.</div>';
+    return;
+  }
+  list.forEach((d,idx)=>{
+    const w=d.why_this_stock||{};
+    const fit=(d.matched_strategies||[]).map(s=>`<span>${esc(trim(s,28))}</span>`).join("");
+    const risks=(d.risk_factors||[]).map(s=>`<span>${esc(s)}</span>`).join("");
+    const conf=Math.round(d.confidence_score||0);
+    const mr=(d.match_results||[]).filter(m=>m&&m.factor);
+    const matchHtml = mr.length ? `
+      <div class="matches">
+        <div class="mh">재무 교차검증</div>
+        ${mr.map(m=>`
+          <div class="mrow">
+            <span class="mf">${esc(m.factor)}</span>
+            <span class="mc">논문 ${esc(m.paper_condition||"")}</span>
+            <span class="mv ${m.is_match?'ok':''}">${m.is_match?'✓ ':''}${fmtVal(m.stock_value)}</span>
+          </div>`).join("")}
+      </div>` : "";
+
+    const el=document.createElement("div");
+    el.className="card";
+    el.style.animationDelay=(idx*.1)+"s";
+    el.innerHTML=`
+      <div class="card-top">
+        <div>
+          <div class="stock"><span class="nm">${esc(d.name)}</span><span class="tk">${esc(d.ticker)}</span></div>
+          <div class="fit">${fit}</div>
+        </div>
+        <div class="score">
+          <div class="num">${conf}</div>
+          <div class="lab">신뢰도</div>
+          <div class="gauge"><i data-w="${conf}"></i></div>
+        </div>
+      </div>
+      <div class="why">
+        <div class="why-row"><div class="k">논문 근거</div><div class="v">${esc(w.paper_basis||"")}</div></div>
+        <div class="why-row"><div class="k">현재 상태</div><div class="v">${esc(w.current_status||"")}</div></div>
+        <div class="why-row"><div class="k">교차 검증</div><div class="v">${esc(w.match_summary||"")}</div></div>
+      </div>
+      ${matchHtml}
+      <div class="summary">${esc(d.simple_summary||"")}</div>
+      ${risks?`<div class="risk"><span class="rl">유의</span>${risks}</div>`:""}
+    `;
+    box.appendChild(el);
+  });
+  requestAnimationFrame(()=>{
+    document.querySelectorAll(".gauge i").forEach(i=>{i.style.width=i.dataset.w+"%";});
+  });
+}
+function renderStrategies(payload){
+  CURRENT_DETAIL=null;
+  const box=document.getElementById("results");
+  const list=payload?.strategies||[];
+  const benchmarkName=(payload?.asset_type==="etf"||LAST_STRATEGY_TYPE==="etf")?"KODEX 200":"KOSPI";
+  box.innerHTML="";
+  if(payload?.coverage_warning){
+    const warning=document.createElement("div");
+    warning.className="method";
+    warning.textContent=payload.coverage_warning;
+    box.appendChild(warning);
+  }
+  if(!list.length){
+    box.innerHTML+='<div class="empty">백테스트 결과가 아직 없습니다. 데이터 수집을 먼저 실행해 주세요.</div>';
+    return;
+  }
+  list.forEach((s,idx)=>{
+    const m=s.metrics||{};
+    const el=document.createElement("div");
+    el.className="card";
+    el.style.animationDelay=(idx*.1)+"s";
+    el.innerHTML=`
+      <div class="card-top">
+        <div>
+          <div class="stock"><span class="nm">${esc(s.name)}</span></div>
+          <div class="fit">${(s.tags||[]).map(x=>`<span>${esc(x)}</span>`).join("")}</div>
+        </div>
+        <div class="score"><div class="num">${num(m.sharpe)}</div><div class="lab">Sharpe</div></div>
+      </div>
+      <div class="summary">${esc(s.description||"")}</div>
+      <div class="metrics">
+        ${metric("연환산 수익률",pct(m.cagr))}
+        ${metric("최대 낙폭",pct(m.mdd))}
+        ${metric("Sharpe",num(m.sharpe))}
+        ${metric(`${benchmarkName} 대비`,pct(s.excess_cagr))}
+      </div>
+      <button class="detail-btn" data-strategy-id="${esc(s.id)}">상세 분석</button>
+    `;
+    box.appendChild(el);
+  });
+  box.querySelectorAll(".detail-btn").forEach(button=>{
+    button.onclick=()=>openStrategyDetail(button.dataset.strategyId);
+  });
+}
+function renderEtfs(payload){
+  const box=document.getElementById("results");
+  const list=payload?.etfs||[];
+  box.innerHTML="";
+  if((payload?.limitations||[]).length){
+    const note=document.createElement("div");
+    note.className="method";
+    note.textContent="데이터 안내 · "+payload.limitations.join(" · ");
+    box.appendChild(note);
+  }
+  if(!list.length){
+    box.innerHTML+='<div class="empty">ETF 스냅샷이 없습니다. ETF 데이터 수집을 먼저 실행해 주세요.</div>';
+    return;
+  }
+  list.forEach((e,idx)=>{
+    const el=document.createElement("div");
+    el.className="card";
+    el.style.animationDelay=(idx*.1)+"s";
+    el.innerHTML=`
+      <div class="card-top">
+        <div>
+          <div class="stock"><span class="nm">${esc(e.name)}</span><span class="tk">${esc(e.ticker)}</span></div>
+          <div class="fit"><span>${esc(e.category||"ETF")}</span>${(e.reasons||[]).slice(0,3).map(x=>`<span>${esc(x)}</span>`).join("")}</div>
+        </div>
+        <div class="score"><div class="num">${num(e.recommendation_score)}</div><div class="lab">ETF 점수</div></div>
+      </div>
+      <div class="metrics">
+        ${metric("1년 수익률",pct(e.return_1y))}
+        ${metric("변동성",pct(e.volatility_1y))}
+        ${metric("최대 낙폭",pct(e.max_drawdown_1y))}
+        ${metric("Sharpe",num(e.sharpe_1y))}
+      </div>
+      <div class="holdings"><b>NAV 괴리율</b> ${pct(e.nav_deviation)} · <b>거래대금</b> ${formatAmount(e.trading_value)} · <b>순자산</b> ${formatAmount(e.market_cap)}</div>
+      <div class="holdings">데이터 커버리지 ${num(e.data_coverage)}% · 레버리지/인버스 제외</div>
+    `;
+    box.appendChild(el);
+  });
+}
+function metric(k,v){return `<div class="metric"><div class="mk">${k}</div><div class="mv">${v}</div></div>`}
+function pct(v){return v==null||v===""?"-":`${num(v)}%`}
+function num(v){const n=Number(v);return Number.isFinite(n)?n.toFixed(2):"-"}
+function formatAmount(v){const n=Number(v);if(!Number.isFinite(n))return "-";return n>=10000?(n/10000).toFixed(1)+"만":Math.round(n).toLocaleString()}
+function openStrategyDetail(id){
+  const next=`#strategy=${encodeURIComponent(LAST_STRATEGY_TYPE)}:${encodeURIComponent(id)}`;
+  if(location.hash===next) handleStrategyHash();
+  else location.hash=next;
+}
+async function handleStrategyHash(){
+  const match=location.hash.match(/^#strategy=([^:]+):(.+)$/);
+  if(!match){
+    if(LAST_STRATEGY_PAYLOAD)renderStrategies(LAST_STRATEGY_PAYLOAD);
+    return;
+  }
+  const assetType=decodeURIComponent(match[1]);
+  const id=decodeURIComponent(match[2]);
+  MODE=assetType==="etf"?"etf_strategy":"strategy";
+  document.querySelectorAll(".mode-tab").forEach(tab=>{
+    tab.classList.toggle("active",tab.dataset.mode===MODE);
+  });
+  document.getElementById("askLabel").textContent="어떤 투자 전략을 찾고 있나요?";
+  document.getElementById("q").placeholder="예: 하락장에서 안정적인 전략 추천해줘";
+  renderChips(assetType==="etf"?etfStrategyExamples:strategyExamples);
+  if(!LAST_STRATEGY_PAYLOAD||LAST_STRATEGY_TYPE!==assetType){
+    try{
+      const res=await fetch(API+`/ai/backtest/strategies?asset_type=${assetType}&limit=10&query=${encodeURIComponent(id)}`);
+      if(!res.ok) return;
+      LAST_STRATEGY_PAYLOAD=await res.json();
+      LAST_STRATEGY_TYPE=assetType;
+    }catch(e){return;}
+  }
+  const strategy=(LAST_STRATEGY_PAYLOAD.strategies||[]).find(item=>item.id===id);
+  if(strategy) renderStrategyDetail(strategy,LAST_STRATEGY_PAYLOAD,assetType);
+}
+function renderStrategyDetail(strategy,payload,assetType){
+  CURRENT_DETAIL={strategy,payload,assetType};
+  const box=document.getElementById("results");
+  const m=strategy.metrics||{}, b=strategy.benchmark_metrics||{};
+  const benchmarkName=assetType==="etf"?"KODEX 200":"KOSPI";
+  const holdings=strategy.current_holdings||[];
+  const maxWeight=Math.max(...holdings.map(x=>Number(x.weight)||1),1);
+  box.innerHTML=`
+    <div class="detail-head">
+      <div>
+        <button class="back-btn" id="detailBack">← 전략 목록</button>
+        <h2 class="detail-title">${esc(strategy.name)}</h2>
+        <div class="fit">${(strategy.tags||[]).map(x=>`<span>${esc(x)}</span>`).join("")}</div>
+      </div>
+      <div class="score"><div class="num">${num(m.sharpe)}</div><div class="lab">Sharpe</div></div>
+    </div>
+    <div class="summary">${esc(strategy.description||"")}</div>
+    <div class="metrics">
+      ${metric("CAGR",pct(m.cagr))}
+      ${metric("누적 수익률",pct(m.cumulative_return))}
+      ${metric("MDD",pct(m.mdd))}
+      ${metric("변동성",pct(m.volatility))}
+      ${metric(`${benchmarkName} 대비`,pct(strategy.excess_cagr))}
+      ${metric(`${benchmarkName} CAGR`,pct(b.cagr))}
+    </div>
+    <section class="detail-section">
+      <h3>누적수익률</h3>
+      <div class="chart-legend">
+        <span><i class="legend-line strategy"></i>전략</span>
+        <span><i class="legend-line benchmark"></i>${benchmarkName}</span>
+      </div>
+      <div class="chart-wrap"><canvas id="equityChart"></canvas></div>
+    </section>
+    <section class="detail-section">
+      <h3>낙폭 (Drawdown)</h3>
+      <div class="chart-wrap drawdown"><canvas id="drawdownChart"></canvas></div>
+    </section>
+    <section class="detail-section">
+      <h3>현재 편입 구성</h3>
+      <div class="allocation">
+        ${holdings.length?holdings.map(x=>{
+          const weight=x.weight!=null?Number(x.weight):100/holdings.length;
+          return `<div class="allocation-row">
+            <span>${esc(x.name)} <small>${esc(x.ticker)}</small></span>
+            <div class="allocation-bar"><i style="width:${Math.max(3,weight/maxWeight*100)}%"></i></div>
+            <b>${num(weight)}%</b>
+          </div>`;
+        }).join(""):'<div class="detail-copy">현재 조건에서는 현금 대기 상태입니다.</div>'}
+      </div>
+    </section>
+    <section class="detail-section">
+      <h3>연도별 수익률</h3>
+      ${annualReturnsTable(strategy.equity_curve||[],strategy.benchmark_curve||[],benchmarkName)}
+    </section>
+    <section class="detail-section">
+      <h3>백테스트 조건</h3>
+      <p class="detail-copy">
+        기간 ${esc(payload.period?.start||"-")} ~ ${esc(payload.period?.end||"-")} ·
+        ${esc(strategy.conditions?.rebalancing||"monthly")} 리밸런싱 ·
+        거래비용 ${num(strategy.conditions?.transaction_cost_bps)}bp
+      </p>
+      <p class="detail-copy">${esc(payload.methodology||"")}</p>
+    </section>
+    <section class="detail-section">
+      <h3>관련 논문 근거</h3>
+      <div class="evidence-list">
+        ${(payload.paper_evidence||[]).length?(payload.paper_evidence||[]).slice(0,5).map(x=>`
+          <div class="evidence-item"><b>${esc(x.title)}</b><p>${esc(trim(x.summary,220))}</p></div>
+        `).join(""):'<p class="detail-copy">연결된 논문 근거가 없습니다.</p>'}
+      </div>
+    </section>
+    <section class="detail-section">
+      <h3>데이터 한계</h3>
+      <p class="detail-copy">${esc((payload.limitations||[]).join(" · ")||"별도 안내 없음")}</p>
+    </section>
+  `;
+  document.getElementById("detailBack").onclick=()=>{
+    CURRENT_DETAIL=null;
+    history.pushState(null,"",location.pathname+location.search);
+    renderStrategies(LAST_STRATEGY_PAYLOAD);
+    window.scrollTo({top:0,behavior:"smooth"});
+  };
+  requestAnimationFrame(()=>{
+    drawBacktestChart(document.getElementById("equityChart"),strategy.equity_curve||[],strategy.benchmark_curve||[],"equity");
+    drawBacktestChart(document.getElementById("drawdownChart"),strategy.equity_curve||[],[],"drawdown");
+  });
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function drawBacktestChart(canvas,strategyRows,benchmarkRows,type){
+  if(!canvas||strategyRows.length<2)return;
+  const rect=canvas.getBoundingClientRect();
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=Math.round(rect.width*dpr);
+  canvas.height=Math.round(rect.height*dpr);
+  const ctx=canvas.getContext("2d");
+  ctx.scale(dpr,dpr);
+  const width=rect.width,height=rect.height;
+  const pad={left:58,right:18,top:16,bottom:30};
+  const plotW=width-pad.left-pad.right,plotH=height-pad.top-pad.bottom;
+  const equityValues=rows=>rows.map(x=>(Number(x.value)-1)*100);
+  const drawdownValues=rows=>{
+    let peak=-Infinity;
+    return rows.map(x=>{
+      const value=Number(x.value);
+      peak=Math.max(peak,value);
+      return (value/peak-1)*100;
+    });
+  };
+  const strategy=type==="drawdown"?drawdownValues(strategyRows):equityValues(strategyRows);
+  const benchmark=type==="equity"?equityValues(benchmarkRows):[];
+  const all=[...strategy,...benchmark,0].filter(Number.isFinite);
+  let min=Math.min(...all),max=Math.max(...all);
+  const margin=Math.max((max-min)*.08,2);
+  min-=margin;max+=margin;
+  if(type==="drawdown")max=0;
+  const span=max-min||1;
+  const x=i=>pad.left+i/(strategy.length-1)*plotW;
+  const y=v=>pad.top+(max-v)/span*plotH;
+
+  ctx.font='11px "Segoe UI",sans-serif';
+  ctx.fillStyle="#6c6557";
+  ctx.strokeStyle="#e5e0d4";
+  ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const value=max-(span*i/4),py=y(value);
+    ctx.beginPath();ctx.moveTo(pad.left,py);ctx.lineTo(width-pad.right,py);ctx.stroke();
+    ctx.textAlign="right";ctx.textBaseline="middle";
+    ctx.fillText(`${value.toFixed(0)}%`,pad.left-8,py);
+  }
+  const dates=strategyRows.map(x=>x.date);
+  for(let i=0;i<=4;i++){
+    const index=Math.min(dates.length-1,Math.round((dates.length-1)*i/4));
+    const px=x(index);
+    ctx.textAlign=i===0?"left":i===4?"right":"center";
+    ctx.textBaseline="top";
+    ctx.fillText(dates[index].slice(0,7),px,height-pad.bottom+8);
+  }
+  const drawLine=(values,color,dashed=false)=>{
+    ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2;
+    ctx.setLineDash(dashed?[6,4]:[]);
+    values.forEach((value,i)=>{if(i===0)ctx.moveTo(x(i),y(value));else ctx.lineTo(x(i),y(value));});
+    ctx.stroke();ctx.setLineDash([]);
+  };
+  if(type==="drawdown"){
+    ctx.beginPath();
+    strategy.forEach((value,i)=>{if(i===0)ctx.moveTo(x(i),y(0));ctx.lineTo(x(i),y(value));});
+    ctx.lineTo(x(strategy.length-1),y(0));ctx.closePath();
+    ctx.fillStyle="rgba(168,68,58,.18)";ctx.fill();
+    drawLine(strategy,"#a8443a");
+  }else{
+    if(benchmark.length===strategy.length)drawLine(benchmark,"#888",true);
+    drawLine(strategy,"#2f6b4f");
+    if(min<0&&max>0){
+      ctx.beginPath();ctx.strokeStyle="#b9b3a3";ctx.lineWidth=1;ctx.setLineDash([3,3]);
+      ctx.moveTo(pad.left,y(0));ctx.lineTo(width-pad.right,y(0));ctx.stroke();ctx.setLineDash([]);
+    }
+  }
+}
+function annualReturnsTable(strategyRows,benchmarkRows,benchmarkName){
+  const yearly=rows=>{
+    const grouped={},values=rows.map(row=>Number(row.value));
+    rows.forEach((row,index)=>{
+      const year=String(row.date).slice(0,4);
+      const value=values[index],previous=index===0?1:values[index-1];
+      if(!Number.isFinite(value)||!Number.isFinite(previous)||previous===0)return;
+      const monthly=value/previous;
+      grouped[year]=(grouped[year]||1)*monthly;
+    });
+    return Object.fromEntries(Object.entries(grouped).map(([year,v])=>[year,(v-1)*100]));
+  };
+  const strategy=yearly(strategyRows),benchmark=yearly(benchmarkRows);
+  const years=[...new Set([...Object.keys(strategy),...Object.keys(benchmark)])].sort();
+  const cell=value=>{
+    const cls=value>0?"positive":value<0?"negative":"";
+    return `<td class="${cls}">${pct(value)}</td>`;
+  };
+  return `<table class="return-table">
+    <thead><tr><th>연도</th><th>전략</th><th>${esc(benchmarkName)}</th><th>초과</th></tr></thead>
+    <tbody>${years.map(year=>`<tr>
+      <td>${year}</td>${cell(strategy[year])}${cell(benchmark[year])}${cell((strategy[year]||0)-(benchmark[year]||0))}
+    </tr>`).join("")}</tbody>
+  </table>`;
+}
+function esc(s){return String(s??"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+function trim(s,n){s=String(s??"");return s.length>n?s.slice(0,n)+"…":s}
+function fmtVal(v){if(v==null||v==="-")return "-";return typeof v==="number"?(Number.isInteger(v)?v:v.toFixed(1)):v}
+
+checkConn();
+window.addEventListener("hashchange",handleStrategyHash);
+let resizeTimer;
+window.addEventListener("resize",()=>{
+  if(!CURRENT_DETAIL)return;
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(()=>{
+    const {strategy}=CURRENT_DETAIL;
+    drawBacktestChart(document.getElementById("equityChart"),strategy.equity_curve||[],strategy.benchmark_curve||[],"equity");
+    drawBacktestChart(document.getElementById("drawdownChart"),strategy.equity_curve||[],[],"drawdown");
+  },120);
+});
+if(location.hash.startsWith("#strategy="))handleStrategyHash();
+</script>
+</body>
+</html>
