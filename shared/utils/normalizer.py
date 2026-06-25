@@ -22,7 +22,10 @@ def normalize_krx_response(raw: dict, ticker: str) -> dict:
     """pykrx get_market_cap 응답 → 보완용 dict"""
     return {
         "price"      : raw.get("TDD_CLSPRC"),
-        "market_cap" : raw.get("MKTCAP"),
+        "market_cap" : (
+            round(raw.get("MKTCAP") / 100_000_000, 2)
+            if raw.get("MKTCAP") is not None else None
+        ),
         "market"     : raw.get("MKT_TP_NM"),   # KOSPI | KOSDAQ
     }
 

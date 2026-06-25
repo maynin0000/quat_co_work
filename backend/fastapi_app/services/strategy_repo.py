@@ -44,6 +44,9 @@ class StrategyBacktestRepo:
             "momentum": ["모멘텀", "추세", "상승", "수익"],
             "low_vol": ["안정", "방어", "저변동", "변동성", "위험", "리스크"],
             "smart_beta": ["복합", "스마트", "팩터"],
+            "reversal": ["반전", "낙폭", "역발상", "반등"],
+            "growth": ["성장", "공격", "나스닥", "미국주식"],
+            "allocation": ["분산", "자산배분", "올웨더", "채권", "금"],
         }
 
         wanted = {
@@ -57,13 +60,20 @@ class StrategyBacktestRepo:
                 strategy.get("description", ""),
                 *strategy.get("tags", []),
             ]).lower()
-            lexical = 0
+            query_terms = [term for term in query_lower.split() if len(term) >= 2]
+            lexical = sum(5 for term in query_terms if term in text)
             if "momentum" in wanted and any(word in text for word in ["모멘텀", "추세"]):
                 lexical += 3
             if "low_vol" in wanted and any(word in text for word in ["저변동성", "방어"]):
                 lexical += 3
             if "smart_beta" in wanted and any(word in text for word in ["복합", "스마트베타"]):
                 lexical += 2
+            if "reversal" in wanted and any(word in text for word in ["반전", "역발상", "반등"]):
+                lexical += 3
+            if "growth" in wanted and any(word in text for word in ["성장", "공격형", "나스닥", "미국주식"]):
+                lexical += 3
+            if "allocation" in wanted and any(word in text for word in ["분산", "자산배분", "올웨더", "채권", "금"]):
+                lexical += 3
             metrics = strategy.get("metrics") or {}
             risk_adjusted = float(metrics.get("sharpe") or 0)
             return lexical, risk_adjusted

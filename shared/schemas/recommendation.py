@@ -41,6 +41,8 @@ class RecommendationResult(BaseModel):
     simple_summary       : str
     evidence             : list[Evidence]
     data_freshness_days  : Optional[int]   = None  # 데이터 신선도
+    data_date            : Optional[datetime] = None
+    data_sources         : list[str] = []
     generated_at         : datetime        = Field(default_factory=datetime.now)
 
 

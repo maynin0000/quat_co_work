@@ -18,6 +18,14 @@ from pathlib import Path
 import FinanceDataReader as fdr
 import pandas as pd
 
+from data_pipeline.scripts.backtest_validation import (
+    completed_monthly_prices,
+    last_completed_month_end,
+    validate_backtest_payload,
+    write_json_utf8,
+)
+from shared.constants.stocks import STOCK_CATALOG
+
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -27,56 +35,7 @@ DATA_DIR = ROOT / "data_pipeline" / "data"
 OUT_PATH = DATA_DIR / "strategy_backtests.json"
 
 
-DEFAULT_UNIVERSE: dict[str, str] = {
-    "005930": "삼성전자",
-    "000660": "SK하이닉스",
-    "005380": "현대차",
-    "000270": "기아",
-    "035420": "NAVER",
-    "105560": "KB금융",
-    "055550": "신한지주",
-    "006400": "삼성SDI",
-    "051910": "LG화학",
-    "012330": "현대모비스",
-    "033780": "KT&G",
-    "030200": "KT",
-    "000810": "삼성화재",
-    "034730": "SK",
-    "003550": "LG",
-    "066570": "LG전자",
-    "086790": "하나금융지주",
-    "316140": "우리금융지주",
-    "259960": "크래프톤",
-    "068270": "셀트리온",
-    "373220": "LG에너지솔루션",
-    "207940": "삼성바이오로직스",
-    "005490": "POSCO홀딩스",
-    "035720": "카카오",
-    "028260": "삼성물산",
-    "015760": "한국전력",
-    "096770": "SK이노베이션",
-    "032830": "삼성생명",
-    "090430": "아모레퍼시픽",
-    "011200": "HMM",
-    "011170": "롯데케미칼",
-    "036570": "엔씨소프트",
-    "003670": "포스코퓨처엠",
-    "329180": "HD현대중공업",
-    "009540": "HD한국조선해양",
-    "012450": "한화에어로스페이스",
-    "079550": "LIG넥스원",
-    "034020": "두산에너빌리티",
-    "010130": "고려아연",
-    "138040": "메리츠금융지주",
-    "018260": "삼성SDS",
-    "352820": "하이브",
-    "042660": "한화오션",
-    "267250": "HD현대",
-    "078930": "GS",
-    "241560": "두산밥캣",
-    "006360": "GS건설",
-    "047050": "포스코인터내셔널",
-}
+DEFAULT_UNIVERSE = STOCK_CATALOG
 
 
 STRATEGIES = [
@@ -114,6 +73,34 @@ STRATEGIES = [
         "description": "6개월 수익률이 양호한 종목만 보유하고, 약세면 현금처럼 대기하는 전략",
         "tags": ["추세", "방어", "현금"],
         "risk_level": "low",
+    },
+    {
+        "id": "momentum_6m",
+        "name": "6개월 모멘텀",
+        "description": "최근 6개월 수익률이 높은 종목을 추종해 중기 추세에 대응하는 전략",
+        "tags": ["모멘텀", "중기추세", "가격"],
+        "risk_level": "high",
+    },
+    {
+        "id": "short_term_reversal",
+        "name": "단기 반전",
+        "description": "장기 추세가 훼손되지 않은 종목 중 최근 1개월 낙폭이 큰 종목의 반등을 노리는 전략",
+        "tags": ["반전", "역발상", "단기"],
+        "risk_level": "high",
+    },
+    {
+        "id": "risk_adjusted_momentum",
+        "name": "위험조정 모멘텀",
+        "description": "12개월 수익률을 최근 변동성으로 나눠 위험 대비 추세가 강한 종목을 선택하는 전략",
+        "tags": ["모멘텀", "위험조정", "스마트베타"],
+        "risk_level": "medium",
+    },
+    {
+        "id": "trend_consistency",
+        "name": "추세 일관성",
+        "description": "최근 6개월 동안 상승한 달이 많고 누적 수익률도 양호한 종목을 선택하는 전략",
+        "tags": ["추세", "일관성", "퀄리티모멘텀"],
+        "risk_level": "medium",
     },
 ]
 
@@ -189,6 +176,8 @@ def select_holdings(
 
     momentum_12m = available.pct_change(12, fill_method=None).iloc[-1]
     momentum_6m = available.pct_change(6, fill_method=None).iloc[-1]
+    momentum_1m = available.pct_change(1, fill_method=None).iloc[-1]
+    monthly_returns = available.pct_change(fill_method=None).tail(6)
     recent_daily = daily_returns.loc[:signal_date].tail(63)
     volatility = recent_daily.std() * math.sqrt(252)
 
@@ -204,6 +193,18 @@ def select_holdings(
     if strategy_id == "trend_defensive":
         positive = momentum_6m[momentum_6m > 0].dropna()
         return positive.nlargest(top_n).index.tolist()
+    if strategy_id == "momentum_6m":
+        return momentum_6m.dropna().nlargest(top_n).index.tolist()
+    if strategy_id == "short_term_reversal":
+        candidates = momentum_1m[(momentum_12m > 0) & momentum_1m.notna()]
+        return candidates.nsmallest(top_n).index.tolist()
+    if strategy_id == "risk_adjusted_momentum":
+        score = (momentum_12m / volatility.replace(0, pd.NA)).dropna()
+        return score.nlargest(top_n).index.tolist()
+    if strategy_id == "trend_consistency":
+        positive_month_ratio = monthly_returns.gt(0).mean()
+        score = (positive_month_ratio * 0.6 + momentum_6m.rank(pct=True) * 0.4).dropna()
+        return score.nlargest(top_n).index.tolist()
     return momentum_12m.dropna().nlargest(top_n).index.tolist()
 
 
@@ -212,9 +213,10 @@ def run_strategy(
     prices: pd.DataFrame,
     top_n: int,
     transaction_cost: float,
+    as_of: date,
 ) -> tuple[pd.Series, list[str]]:
     daily_returns = prices.pct_change(fill_method=None)
-    month_close = prices.resample("ME").last().dropna(how="all")
+    month_close = completed_monthly_prices(prices, as_of)
     month_returns = month_close.pct_change(fill_method=None)
     portfolio_returns = {}
     previous_holdings: set[str] = set()
@@ -258,7 +260,9 @@ def main(years: int, top_n: int, transaction_cost_bps: float):
     results = []
     for template in STRATEGIES:
         holdings_size = len(prices.columns) if template["id"] == "equal_weight" else top_n
-        returns, holdings = run_strategy(template["id"], prices, top_n, transaction_cost)
+        returns, holdings = run_strategy(
+            template["id"], prices, top_n, transaction_cost, end_date
+        )
         if returns.empty:
             continue
         benchmark = benchmark_monthly.reindex(returns.index).fillna(0)
@@ -299,17 +303,19 @@ def main(years: int, top_n: int, transaction_cost_bps: float):
         ],
         "period": {
             "start": start_date.isoformat(),
-            "end": end_date.isoformat(),
+            "end": last_completed_month_end(end_date).date().isoformat(),
         },
+        "source_data_as_of": end_date.isoformat(),
         "universe": [
             {"ticker": ticker, "name": universe.get(ticker, ticker)}
             for ticker in prices.columns
         ],
         "strategies": results,
     }
+    payload["validation"] = validate_backtest_payload(payload, as_of=end_date)
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    OUT_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    write_json_utf8(OUT_PATH, payload)
     logger.info("saved %s strategies to %s", len(results), OUT_PATH)
     logger.info("universe size: %s", len(prices.columns))
 

@@ -22,6 +22,19 @@ async def recommend_stream_generator(request: Request, user_req: RecommendationR
         if not embedder or not recommender:
             raise RuntimeError("서버 내부 객체(Embedder/Recommender)가 초기화되지 않았습니다.")
 
+        direct_results = await recommender.search_named_stocks(
+            user_query=user_req.user_input,
+            top_n=user_req.top_n,
+        )
+        if direct_results:
+            yield f"data: {json.dumps({'status': 'processing', 'message': '종목명 및 종목코드 직접 검색 중...'}, ensure_ascii=False)}\n\n"
+            final_result = {
+                "status": "complete",
+                "data": jsonable_encoder(direct_results),
+            }
+            yield f"data: {json.dumps(final_result, ensure_ascii=False)}\n\n"
+            return
+
         # 상태 1: 임베딩 시작
         yield f"data: {json.dumps({'status': 'processing', 'message': '질문 의도 파악 및 벡터 변환 중...'})}\n\n"
         

@@ -1,4 +1,5 @@
 from shared.schemas.etf import EtfRawData
+import re
 
 
 class EtfRecommender:
@@ -24,6 +25,50 @@ class EtfRecommender:
         payload = self.repo.load_payload()
         rows = self.repo.get_all()
         query_lower = (query or "").lower()
+        normalized_query = self._normalize(query)
+
+        direct = [
+            etf for etf in rows
+            if self._normalize(etf.name) in normalized_query
+            or self._normalize(etf.ticker) in normalized_query
+        ]
+        if direct:
+            target = max(direct, key=lambda etf: len(self._normalize(etf.name)))
+            peers = [
+                etf for etf in rows
+                if etf.ticker != target.ticker
+                and etf.category == target.category
+                and not etf.leveraged
+                and not etf.inverse
+            ]
+            peers.sort(
+                key=lambda etf: (
+                    -(float(etf.trading_value or 0)),
+                    abs(float(etf.nav_deviation or 0)),
+                )
+            )
+            selected = [target, *peers[: max(0, limit - 1)]]
+            return {
+                "generated_at": payload.get("generated_at"),
+                "limitations": payload.get("limitations", []),
+                "search_type": "direct_with_similar",
+                "etfs": [
+                    {
+                        **etf.model_dump(mode="json"),
+                        "recommendation_score": None,
+                        "confidence_score": None,
+                        "reasons": (
+                            ["검색한 ETF"]
+                            if index == 0
+                            else [f"{target.category or '동일'} 카테고리 유사 ETF"]
+                        ),
+                        "data_coverage": etf.data_completeness,
+                        "theme_match": [],
+                        "result_role": "target" if index == 0 else "similar",
+                    }
+                    for index, etf in enumerate(selected)
+                ],
+            }
 
         active_themes = {
             theme for theme, words in self.THEMES.items()
@@ -87,8 +132,13 @@ class EtfRecommender:
         return {
             "generated_at": payload.get("generated_at"),
             "limitations": payload.get("limitations", []),
+            "search_type": "quant",
             "etfs": scored[:limit],
         }
+
+    @staticmethod
+    def _normalize(value: str) -> str:
+        return re.sub(r"[^0-9a-z가-힣]", "", (value or "").lower())
 
     def _build_match_map(self, name: str, category: str):
         return {

@@ -25,7 +25,8 @@
 
   header{padding:30px 0 22px;border-bottom:1px solid var(--line)}
   .brand{display:flex;align-items:baseline;gap:12px}
-  .logo{font-family:"Georgia",serif;font-size:28px;font-weight:700;letter-spacing:-.4px;color:var(--moss-d)}
+  .logo{font-family:"Georgia",serif;font-size:28px;font-weight:700;letter-spacing:-.4px;color:var(--moss-d);text-decoration:none;cursor:pointer;border-radius:6px}
+  .logo:focus-visible{outline:2px solid var(--moss);outline-offset:4px}
   .logo b{color:var(--amber)}
   .tag{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
   .lede{margin-top:14px;font-family:"Pretendard","Segoe UI",-apple-system,sans-serif;font-size:20px;line-height:1.45;color:var(--ink);max-width:720px;font-weight:500}
@@ -42,7 +43,8 @@
   .mode-tab.active{background:linear-gradient(135deg,var(--moss-d),var(--moss));border-color:transparent;color:#fff;box-shadow:0 6px 14px rgba(47,110,207,.16)}
   .ask label{display:block;font-size:13px;color:var(--muted);margin-bottom:9px}
   .field{display:flex;gap:10px;flex-wrap:wrap}
-  .field input{flex:1;min-width:240px;padding:14px 16px;font-size:15px;border:1.5px solid var(--line);border-radius:12px;background:rgba(255,255,255,.96);color:var(--ink);font-family:inherit;box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+  .field input{flex:1;min-width:240px;padding:14px 16px;font-size:15px;border:1.5px solid var(--line);border-radius:12px;background:rgba(255,255,255,.96);color:var(--ink);font-family:inherit;box-shadow:inset 0 1px 0 rgba(255,255,255,.8);appearance:none;-webkit-appearance:none}
+  .field input::-webkit-list-button{display:none}
   .field input:focus{outline:none;border-color:var(--moss)}
   .field button{padding:14px 22px;font-size:14px;font-weight:600;border:none;border-radius:12px;background:linear-gradient(135deg,var(--moss-d),var(--moss));color:#fff;cursor:pointer;font-family:inherit;transition:transform .15s,box-shadow .15s}
   .field button:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(47,110,207,.2)}
@@ -63,6 +65,20 @@
   @keyframes sp{to{transform:rotate(360deg)}}
 
   .results{margin:12px 0 56px}
+  .result-type{display:flex;align-items:center;gap:9px;margin:4px 0 14px;padding:10px 13px;border:1px solid var(--line);border-radius:10px;background:rgba(231,240,251,.72);font-size:12px;color:var(--muted)}
+  .result-type b{padding:4px 9px;border-radius:12px;background:var(--moss-d);color:#fff;font-size:11px}
+  .result-section{margin:17px 0 9px;font-size:13px;font-weight:700;color:var(--ink)}
+  .result-section:first-of-type{margin-top:4px}
+  .result-tools{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin:10px 0 14px;flex-wrap:wrap}
+  .result-tools select,.result-tools button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:9px;padding:8px 10px;font:inherit;font-size:12px}
+  .result-tools button{cursor:pointer;color:var(--moss-d);font-weight:600}
+  .compare-table{width:100%;border-collapse:collapse;margin:12px 0 18px;background:#fff;border:1px solid var(--line);font-size:12px}
+  .compare-table th,.compare-table td{padding:9px;border-bottom:1px solid var(--line);text-align:right}
+  .compare-table th:first-child,.compare-table td:first-child{text-align:left}
+  .source-note{margin-top:10px;font-size:11px;color:var(--muted)}
+  .card-actions{display:flex;gap:8px;margin-top:12px}
+  .card-actions button{padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--moss-d);font-size:11px;cursor:pointer}
+  .watch-btn.saved{background:var(--moss-d);color:#fff}
   .card{background:rgba(255,255,255,.98);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:16px;opacity:0;transform:translateY(14px);animation:rise .5s ease forwards;box-shadow:0 8px 22px rgba(16,32,56,.04)}
   @keyframes rise{to{opacity:1;transform:none}}
   .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
@@ -104,6 +120,7 @@
   .holdings{margin-top:12px;font-size:12px;color:var(--muted)}
   .holdings b{color:var(--ink)}
   .method{margin:16px 0;padding:11px 13px;border-radius:10px;background:var(--paper-2);font-size:12px;color:var(--muted)}
+  .method.warn{background:rgba(219,95,111,.08);border:1px solid rgba(219,95,111,.2);color:var(--rose)}
   .detail-btn{margin-top:14px;padding:9px 14px;border:1px solid var(--moss);border-radius:9px;background:transparent;color:var(--moss-d);font-weight:600;cursor:pointer;font-family:inherit}
   .detail-btn:hover{background:linear-gradient(135deg,var(--moss-d),var(--moss));color:#fff}
   .detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin:14px 0 18px}
@@ -152,7 +169,7 @@
 
   <header>
     <div class="brand">
-      <div class="logo">Quant<b>ra</b></div>
+      <a class="logo" id="homeLink" href="#" aria-label="Quantra 홈으로 이동">Quant<b>ra</b></a>
       <div class="tag">근거로 고르는 투자</div>
     </div>
     <p class="lede">주식 용어를 몰라도 괜찮아요.<br>말하는 대로 <em>논문과 재무 데이터</em>로 검증해 드릴게요.</p>
@@ -168,7 +185,8 @@
     </div>
     <label for="q" id="askLabel">어떤 주식을 찾고 있나요?</label>
     <div class="field">
-      <input id="q" placeholder="예: 배당 많이 주는 안정적인 주식 찾아줘" autocomplete="off">
+      <input id="q" list="stockOptions" placeholder="예: 배당 많이 주는 안정적인 주식 찾아줘" autocomplete="off">
+      <datalist id="stockOptions"></datalist>
       <button id="go">분석하기</button>
     </div>
     <div class="chips" id="chips"></div>
@@ -210,12 +228,146 @@ const etfStrategyExamples = [
   "미국주식과 채권을 섞은 전략",
   "ETF 모멘텀 로테이션 전략",
 ];
+const STOCK_CATALOG = [
+  ["005930","삼성전자",["삼전","samsung electronics"]],
+  ["000660","SK하이닉스",["하이닉스","hynix","sk hynix"]],
+  ["005380","현대차",[]],["000270","기아",[]],["035420","NAVER",["네이버"]],
+  ["105560","KB금융",[]],["055550","신한지주",[]],["006400","삼성SDI",[]],
+  ["051910","LG화학",[]],["012330","현대모비스",[]],["033780","KT&G",["케이티앤지"]],
+  ["030200","KT",[]],["000810","삼성화재",[]],["034730","SK",[]],["003550","LG",[]],
+  ["066570","LG전자",[]],["086790","하나금융지주",["하나금융"]],
+  ["316140","우리금융지주",["우리금융"]],["259960","크래프톤",[]],["068270","셀트리온",[]],
+  ["373220","LG에너지솔루션",["LG엔솔"]],["207940","삼성바이오로직스",["삼성바이오"]],
+  ["005490","POSCO홀딩스",["포스코홀딩스"]],["035720","카카오",[]],["028260","삼성물산",[]],
+  ["015760","한국전력",["한전"]],["096770","SK이노베이션",[]],["032830","삼성생명",[]],
+  ["090430","아모레퍼시픽",[]],["011200","HMM",[]],["011170","롯데케미칼",[]],
+  ["036570","엔씨소프트",["NC소프트"]],["003670","포스코퓨처엠",[]],
+  ["329180","HD현대중공업",["현대중공업"]],["009540","HD한국조선해양",["한국조선해양"]],
+  ["012450","한화에어로스페이스",["한화에어로"]],["079550","LIG넥스원",[]],
+  ["034020","두산에너빌리티",[]],["010130","고려아연",[]],["138040","메리츠금융지주",["메리츠금융"]],
+  ["018260","삼성SDS",[]],["352820","하이브",[]],["042660","한화오션",[]],
+  ["267250","HD현대",[]],["078930","GS",[]],["241560","두산밥캣",[]],
+  ["006360","GS건설",[]],["047050","포스코인터내셔널",["포스코인터"]]
+];
+const STOCK_PEER_GROUPS = [
+  ["005930","000660","066570","018260"],
+  ["005380","000270","012330","241560"],
+  ["105560","055550","086790","316140","138040"],
+  ["000810","032830","105560","055550"],
+  ["006400","373220","051910","096770","003670","011170"],
+  ["035420","035720","259960","036570","352820"],
+  ["068270","207940","090430","051910"],
+  ["034730","003550","028260","267250","078930","005490"],
+  ["015760","034020","096770","078930"],
+  ["033780","030200","090430","015760"],
+  ["011200","047050","009540","042660"],
+  ["329180","009540","042660","012450","079550"],
+  ["005490","003670","010130","047050","011170"],
+  ["012450","079550","042660","329180"],
+  ["006360","028260","241560","047050"]
+];
+const ENTITY_GROUPS = [{
+  label:"삼성 계열사",
+  keywords:["이재용","삼성","삼성그룹","삼성계열","삼성관련"],
+  tickers:["005930","028260","207940","006400","018260"],
+  basisDate:"2026-06-25"
+},{
+  label:"SK 계열사",
+  keywords:["최태원","SK그룹","SK계열","SK관련"],
+  tickers:["034730","000660","096770"],
+  basisDate:"2026-06-25"
+},{
+  label:"LG 계열사",
+  keywords:["구광모","LG그룹","LG계열","LG관련"],
+  tickers:["003550","066570","051910","373220"],
+  basisDate:"2026-06-25"
+},{
+  label:"현대자동차그룹 계열사",
+  keywords:["정의선","현대","현대차그룹","현대자동차그룹","현대관련"],
+  tickers:["005380","000270","012330"],
+  basisDate:"2026-06-25"
+},{
+  label:"한화 계열사",
+  keywords:["김승연","한화","한화그룹","한화계열","한화관련"],
+  tickers:["012450","042660"],
+  basisDate:"2026-06-25"
+},{
+  label:"포스코그룹 계열사",
+  keywords:["포스코","POSCO그룹","포스코그룹","포스코계열","포스코관련"],
+  tickers:["005490","003670","047050"],
+  basisDate:"2026-06-25"
+},{
+  label:"HD현대 계열사",
+  keywords:["HD현대그룹","HD현대계열","HD현대관련"],
+  tickers:["267250","329180","009540"],
+  basisDate:"2026-06-25"
+},{
+  label:"두산그룹 계열사",
+  keywords:["두산","두산그룹","두산계열","두산관련"],
+  tickers:["034020","241560"],
+  basisDate:"2026-06-25"
+}];
+const GENERIC_GROUP_KEYWORDS=new Set(["삼성","현대","한화","포스코","두산"].map(value=>value.toLowerCase()));
+const stockOptions=document.getElementById("stockOptions");
+STOCK_CATALOG.forEach(([ticker,name,aliases])=>{
+  [name,ticker,...aliases].forEach(value=>{
+    const option=document.createElement("option");
+    option.value=value;
+    option.label=`${name} · ${ticker}`;
+    stockOptions.appendChild(option);
+  });
+});
 
 let LIVE = false;
 let MODE = "stock";
 let LAST_STRATEGY_PAYLOAD = null;
 let LAST_STRATEGY_TYPE = "stock";
 let CURRENT_DETAIL = null;
+let RUN_VERSION = 0;
+let CURRENT_STOCK_RESULTS = [];
+let CURRENT_STOCK_QUERY = "";
+let STRATEGY_COMPARE_IDS = new Set();
+const WATCHLIST_KEY="quantra_watchlist";
+function getWatchlist(){
+  try{return JSON.parse(localStorage.getItem(WATCHLIST_KEY)||"[]");}catch(e){return []}
+}
+function isWatched(ticker){return getWatchlist().some(item=>item.ticker===ticker)}
+function toggleWatch(item){
+  const list=getWatchlist();
+  const index=list.findIndex(saved=>saved.ticker===item.ticker);
+  if(index>=0)list.splice(index,1);
+  else list.push({ticker:item.ticker,name:item.name,added_at:new Date().toISOString()});
+  localStorage.setItem(WATCHLIST_KEY,JSON.stringify(list));
+}
+function saveViewState(){
+  sessionStorage.setItem("quantra_view",JSON.stringify({
+    mode:MODE,query:document.getElementById("q").value,scrollY:window.scrollY
+  }));
+}
+function goHome(event){
+  if(event)event.preventDefault();
+  RUN_VERSION++;
+  MODE="stock";
+  LAST_STRATEGY_PAYLOAD=null;
+  LAST_STRATEGY_TYPE="stock";
+  CURRENT_DETAIL=null;
+  history.replaceState(null,"",location.pathname+location.search);
+  document.querySelectorAll(".mode-tab").forEach(tab=>{
+    tab.classList.toggle("active",tab.dataset.mode==="stock");
+  });
+  const input=document.getElementById("q");
+  input.value="";
+  input.setAttribute("list","stockOptions");
+  document.getElementById("askLabel").textContent="어떤 주식을 찾고 있나요?";
+  input.placeholder="예: 배당 많이 주는 안정적인 주식 찾아줘";
+  document.getElementById("results").innerHTML='<div class="empty" id="empty">질문을 입력하면 근거와 함께 종목을 추천해 드려요.</div>';
+  streamBox.innerHTML="";
+  streamBox.classList.remove("on");
+  goBtn.disabled=false;
+  renderChips(examples);
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+document.getElementById("homeLink").addEventListener("click",goHome);
 async function checkConn(){
   try{
     const r = await fetch(API+"/ai/health",{signal:AbortSignal.timeout(1500)});
@@ -246,9 +398,13 @@ document.querySelectorAll(".mode-tab").forEach(button=>{
       history.replaceState(null,"",location.pathname+location.search);
     }
     MODE=button.dataset.mode;
+    history.pushState({mode:MODE},"",location.pathname+location.search);
     document.querySelectorAll(".mode-tab").forEach(tab=>tab.classList.toggle("active",tab===button));
     const strategy=MODE==="strategy"||MODE==="etf_strategy";
     const etf=MODE==="etf";
+    const queryInput=document.getElementById("q");
+    if(MODE==="stock")queryInput.setAttribute("list","stockOptions");
+    else queryInput.removeAttribute("list");
     document.getElementById("askLabel").textContent=strategy?"어떤 투자 전략을 찾고 있나요?":etf?"어떤 ETF를 찾고 있나요?":"어떤 주식을 찾고 있나요?";
     document.getElementById("q").placeholder=strategy?"예: 하락장에서 안정적인 전략 추천해줘":etf?"예: 미국 성장주 ETF 찾아줘":"예: 배당 많이 주는 안정적인 주식 찾아줘";
     document.getElementById("q").value="";
@@ -288,8 +444,11 @@ goBtn.onclick=run;
 document.getElementById("q").addEventListener("keydown",e=>{if(e.key==="Enter")run();});
 
 async function run(){
+  const runVersion=++RUN_VERSION;
   const q=document.getElementById("q").value.trim();
   if(!q) return;
+  CURRENT_STOCK_QUERY=q;
+  saveViewState();
   goBtn.disabled=true;
   document.getElementById("empty")?.remove();
   document.getElementById("results").innerHTML="";
@@ -299,6 +458,7 @@ async function run(){
   let data=[];
   if(MODE==="strategy"||MODE==="etf_strategy"){
     const payload=await runStrategy(q,MODE==="etf_strategy"?"etf":"stock");
+    if(runVersion!==RUN_VERSION)return;
     finishLogs();
     await sleep(150);
     streamBox.classList.remove("on");
@@ -308,6 +468,7 @@ async function run(){
   }
   if(MODE==="etf"){
     const payload=await runEtf(q);
+    if(runVersion!==RUN_VERSION)return;
     finishLogs();
     await sleep(150);
     streamBox.classList.remove("on");
@@ -327,6 +488,7 @@ async function run(){
     data = await runMock(q);
   }
 
+  if(runVersion!==RUN_VERSION)return;
   finishLogs();
   await sleep(250);
   streamBox.classList.remove("on");
@@ -337,7 +499,7 @@ async function run(){
 async function runStrategy(q,assetType){
   pushLog("질문과 전략 성격 매칭 중…");
   try{
-    const res=await fetch(API+"/ai/backtest/strategies?limit=3&asset_type="+assetType+"&query="+encodeURIComponent(q));
+    const res=await fetch(API+"/ai/backtest/strategies?limit=5&asset_type="+assetType+"&query="+encodeURIComponent(q));
     if(!res.ok) throw new Error("strategy api");
     const payload=await res.json();
     LAST_STRATEGY_PAYLOAD=payload;
@@ -414,6 +576,124 @@ async function runMock(q){
 }
 
 function mockData(q){
+  const normalizeStockTerm=value=>String(value||"").toLowerCase().replace(/[^0-9a-z가-힣]/g,"");
+  const similarity=(a,b)=>{
+    const rows=Array.from({length:a.length+1},()=>Array(b.length+1).fill(0));
+    for(let i=0;i<=a.length;i++)rows[i][0]=i;
+    for(let j=0;j<=b.length;j++)rows[0][j]=j;
+    for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++){
+      rows[i][j]=Math.min(rows[i-1][j]+1,rows[i][j-1]+1,rows[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+    }
+    return 1-rows[a.length][b.length]/Math.max(a.length,b.length,1);
+  };
+  const normalizedQuery=normalizeStockTerm(q);
+  let directMatches=STOCK_CATALOG.map(([ticker,name,aliases])=>{
+    const matches=[name,ticker,...aliases].map(normalizeStockTerm)
+      .filter(candidate=>candidate&&normalizedQuery.includes(candidate))
+      .map(candidate=>[normalizedQuery===candidate?0:1,normalizedQuery.indexOf(candidate),-candidate.length]);
+    if(!matches.length)return null;
+    matches.sort((a,b)=>a[0]-b[0]||a[1]-b[1]||a[2]-b[2]);
+    return {ticker,name,rank:matches[0]};
+  }).filter(Boolean);
+  const hasExactStock=directMatches.some(item=>item.rank[0]===0);
+  if(hasExactStock){
+    directMatches=directMatches.filter(item=>item.rank[0]===0);
+  }
+
+  if(!hasExactStock){
+    const entity=ENTITY_GROUPS.map(group=>{
+      const lengths=group.keywords.map(normalizeStockTerm)
+        .filter(keyword=>keyword&&(
+          GENERIC_GROUP_KEYWORDS.has(keyword)
+            ?normalizedQuery===keyword
+            :normalizedQuery.includes(keyword)
+        ))
+        .map(keyword=>keyword.length);
+      return lengths.length?{group,length:Math.max(...lengths)}:null;
+    }).filter(Boolean).sort((a,b)=>b.length-a.length)[0]?.group;
+    if(entity){
+      const byTicker=new Map(STOCK_CATALOG.map(([ticker,name])=>[ticker,name]));
+      return entity.tickers.slice(0,5).map(ticker=>{
+        const name=byTicker.get(ticker)||ticker;
+        return mk(name,ticker,0,70,["인물·기업집단 연관 검색"],
+          `검색어를 ${entity.label} 연관 키워드로 해석했습니다. 관계 기준일은 ${entity.basisDate}입니다.`,
+          `${entity.label} 연관 종목으로 분류된 검색 결과입니다.`,
+          "인물·기업집단 연관성은 투자 매력도나 매수 의견을 의미하지 않습니다.",
+          `${name}(${ticker}) — ${entity.label} 연관 검색 결과`,
+          ["기업집단 연관 검색 결과이며 투자 추천 순위가 아닙니다.","계열 관계와 지배구조는 변경될 수 있습니다."],
+          []);
+      });
+    }
+  }
+
+  if(!directMatches.length){
+    const terms=[normalizedQuery,...String(q).split(/[^0-9A-Za-z가-힣]+/).map(normalizeStockTerm)]
+      .filter(term=>term.length>=3&&!["분석","검색","주가","종목","추천"].includes(term));
+    const typo=STOCK_CATALOG.map(([ticker,name,aliases])=>{
+      let score=0;
+      for(const candidateRaw of [name,...aliases]){
+        const candidate=normalizeStockTerm(candidateRaw);
+        if(candidate.length<3)continue;
+        for(const term of terms){
+          const next=(candidate.startsWith(term)||term.startsWith(candidate))
+            ?Math.min(term.length,candidate.length)/Math.max(term.length,candidate.length)
+            :similarity(term,candidate);
+          score=Math.max(score,next);
+        }
+      }
+      return {ticker,name,score};
+    }).filter(item=>item.score>=.72).sort((a,b)=>b.score-a.score||b.name.length-a.name.length)[0];
+    if(typo)directMatches=[{ticker:typo.ticker,name:typo.name,rank:[2,0,-typo.name.length]}];
+  }
+
+  const direct=directMatches.sort((a,b)=>
+    a.rank[0]-b.rank[0]||a.rank[1]-b.rank[1]||a.rank[2]-b.rank[2]
+  ).slice(0,5).map(({ticker,name})=>
+    mk(name,ticker,0,55,["직접 종목명 검색"],
+      "사용자가 종목명 또는 종목코드를 직접 지정했습니다.",
+      "현재 데모 모드에서는 종목 기본정보만 표시합니다.",
+      "검색어와 종목명 또는 별칭이 일치하여 우선 표시한 결과입니다.",
+      `${name}(${ticker}) 직접 검색 결과입니다.`,
+      ["직접 검색 결과이며 매수 추천 순위가 아닙니다.","실시간 재무 지표는 FastAPI 연결 시 제공됩니다."],
+      [])
+  );
+  const compareRequested=direct.length>=2&&/비교|vs|대비|중에|중에서/i.test(q);
+  if(compareRequested){
+    direct.forEach(item=>{
+      item.matched_strategies=["종목 비교"];
+      item.why_this_stock.match_summary=`${direct.length}개 종목을 동일한 지표 기준으로 비교합니다.`;
+    });
+    return direct;
+  }
+  const conditionRequested=direct.length===1&&/배당|저평가|가치|성장|안정|변동성|모멘텀|추세|부채|수익성/i.test(q);
+  if(conditionRequested){
+    direct[0].matched_strategies=["종목 조건 분석"];
+    direct[0].why_this_stock.paper_basis="검색한 종목과 함께 입력한 투자 조건을 분석합니다.";
+    direct[0].why_this_stock.match_summary="현재 확보된 재무·가격 데이터로 조건 충족 여부를 확인합니다.";
+    return direct;
+  }
+  if(direct.length===1){
+    const target=direct[0];
+    const byTicker=new Map(STOCK_CATALOG.map(([ticker,name])=>[ticker,name]));
+    const peers=[];
+    STOCK_PEER_GROUPS.filter(group=>group.includes(target.ticker)).forEach(group=>{
+      group.forEach(ticker=>{
+        if(ticker!==target.ticker&&!peers.includes(ticker))peers.push(ticker);
+      });
+    });
+    peers.slice(0,3).forEach(ticker=>{
+      const name=byTicker.get(ticker)||ticker;
+      direct.push(mk(name,ticker,0,55,["유사 종목 추천"],
+        `${target.name}과 같은 업종·사업군 후보로 분류했습니다.`,
+        `${target.name} 검색 결과와 함께 비교할 수 있는 유사 종목입니다.`,
+        "업종·사업군을 기준으로 선정한 비교 후보입니다.",
+        `${target.name}과 비교해 볼 유사 종목: ${name}(${ticker})`,
+        ["유사 업종 분류는 투자 성과의 유사성을 보장하지 않습니다."],
+        []));
+    });
+  }
+  if(direct.length) return direct;
+
   const isGrowth=/성장|크는|테슬라|빠르/.test(q);
   const isDiv=/배당|안정|안전|부채|우량/.test(q);
   if(isGrowth){
@@ -477,64 +757,108 @@ function mk(name,ticker,rec,conf,fit,paper,status,match,summary,risks,matchRows)
     matched_strategies:fit,
     why_this_stock:{paper_basis:paper,current_status:status,match_summary:match},
     match_results:(matchRows||[]).map(m=>({factor:m.factor,paper_condition:m.cond,stock_value:m.val,is_match:m.ok,gap:0})),
-    simple_summary:summary,risk_factors:risks,evidence:[]
+    simple_summary:summary,risk_factors:risks,evidence:[],data_date:"2026-06-24T00:00:00",
+    data_sources:["가격·모멘텀: 데모 스냅샷","재무지표: 데모 보완"]
   };
 }
 
 // ── 렌더 ──
-function render(list){
+function render(list,preserve=false){
   const box=document.getElementById("results");
   box.innerHTML="";
   if(!list||!list.length){
-    box.innerHTML='<div class="empty">조건에 맞는 종목을 찾지 못했어요. 다르게 질문해 보세요.</div>';
+    box.innerHTML=`<div class="empty">조건에 맞는 종목을 찾지 못했습니다.<br>
+      <small>인식한 검색어: ${esc(CURRENT_STOCK_QUERY||"-")} · 조건을 하나 줄이거나 기준을 완화해 보세요.</small></div>`;
     return;
   }
+  if(!preserve)CURRENT_STOCK_RESULTS=[...list];
+  const strategies=list.flatMap(item=>item.matched_strategies||[]);
+  const type=strategies.includes("인물·기업집단 연관 검색")
+    ?["기업집단 연관 검색","인물·그룹 키워드로 연결된 종목입니다."]
+    :strategies.includes("종목 비교")
+      ?["종목 비교","선택한 종목을 동일한 재무·가격 지표로 비교합니다."]
+    :strategies.includes("종목 조건 분석")
+      ?["종목 조건 분석","검색한 종목이 요청 조건을 충족하는지 분석합니다."]
+    :strategies.includes("유사 종목 추천")
+      ?["직접 검색 + 유사 종목","검색한 종목과 같은 업종·사업군의 비교 후보를 함께 보여드립니다."]
+    :strategies.includes("직접 종목명 검색")
+      ?["직접 종목 검색","종목명·코드·유사 검색어로 찾은 결과입니다."]
+      :["퀀트 추천","논문과 재무 팩터를 바탕으로 산출한 결과입니다."];
+  const dataDates=list.map(item=>item.data_date).filter(Boolean).sort();
+  const dataDate=dataDates.length?` · 데이터 ${formatDate(dataDates[dataDates.length-1])} 기준`:"";
+  box.insertAdjacentHTML("beforeend",`<div class="result-type"><b>${esc(type[0])}</b><span>${esc(type[1]+dataDate)}</span></div>`);
+  box.insertAdjacentHTML("beforeend",`<div class="result-tools">
+    <label>정렬 <select id="stockSort"><option value="default">기본순</option><option value="score">추천점수순</option><option value="confidence">신뢰도순</option><option value="name">이름순</option></select></label>
+    <label>필터 <select id="stockFilter"><option value="all">전체</option><option value="matched">충족 조건 있음</option><option value="watched">관심 종목만</option></select></label>
+    <button id="showWatchlist">관심 종목 (${getWatchlist().length})</button>
+  </div>`);
+  if(strategies.includes("종목 비교")){
+    const value=(item,label)=>{
+      const row=(item.match_results||[]).find(match=>match.factor===label);
+      return row?fmtVal(row.stock_value):"-";
+    };
+    box.insertAdjacentHTML("beforeend",`<table class="compare-table"><thead><tr><th>종목</th><th>PBR</th><th>PER</th><th>ROE</th><th>12개월 모멘텀</th><th>신뢰도</th></tr></thead><tbody>
+      ${list.map(item=>`<tr><td>${esc(item.name)} <small>${esc(item.ticker)}</small></td><td>${value(item,"PBR")}</td><td>${value(item,"PER")}</td><td>${value(item,"ROE")}</td><td>${value(item,"12개월 모멘텀")}</td><td>${num(item.confidence_score)}</td></tr>`).join("")}
+    </tbody></table>`);
+  }
+  let lastSection="";
   list.forEach((d,idx)=>{
+    const itemStrategies=d.matched_strategies||[];
+    const section=itemStrategies.includes("유사 종목 추천")?"비슷한 종목":strategies.includes("유사 종목 추천")?"검색한 종목":"";
+    if(section&&section!==lastSection){
+      box.insertAdjacentHTML("beforeend",`<div class="result-section">${esc(section)}</div>`);
+      lastSection=section;
+    }
     const w=d.why_this_stock||{};
-    const fit=(d.matched_strategies||[]).map(s=>`<span>${esc(trim(s,28))}</span>`).join("");
+    const fit=itemStrategies.map(s=>`<span>${esc(trim(s,28))}</span>`).join("");
     const risks=(d.risk_factors||[]).map(s=>`<span>${esc(s)}</span>`).join("");
     const conf=Math.round(d.confidence_score||0);
+    const direct=itemStrategies.includes("직접 종목명 검색");
+    const similar=itemStrategies.includes("유사 종목 추천");
+    const entity=itemStrategies.includes("인물·기업집단 연관 검색");
+    const comparison=itemStrategies.includes("종목 비교");
+    const scoreHtml=(direct||similar||entity||comparison)
+      ?`<div class="score"><div class="num" style="font-size:18px">${comparison?"비교":direct?"조회":similar?"비교":"연관"}</div><div class="lab">${comparison?"비교 대상":direct?"검색한 종목":similar?"유사 종목":"기업집단"}</div></div>`
+      :`<div class="score"><div class="num">${Math.round(d.recommendation_score||0)}</div><div class="lab">추천 점수 · 신뢰도 ${conf}</div><div class="gauge"><i data-w="${conf}"></i></div></div>`;
     const mr=(d.match_results||[]).filter(m=>m&&m.factor);
-    const matchHtml = mr.length ? `
-      <div class="matches">
-        <div class="mh">재무 교차검증</div>
-        ${mr.map(m=>`
-          <div class="mrow">
-            <span class="mf">${esc(m.factor)}</span>
-            <span class="mc">논문 ${esc(m.paper_condition||"")}</span>
-            <span class="mv ${m.is_match?'ok':''}">${m.is_match?'✓ ':''}${fmtVal(m.stock_value)}</span>
-          </div>`).join("")}
-      </div>` : "";
-
+    const matchHtml=mr.length?`<div class="matches"><div class="mh">재무 교차검증</div>${mr.map(m=>`<div class="mrow"><span class="mf">${esc(m.factor)}</span><span class="mc">기준 ${esc(m.paper_condition||"")}</span><span class="mv ${m.is_match?'ok':''}">${m.is_match?'✓ ':''}${fmtVal(m.stock_value)}</span></div>`).join("")}</div>`:"";
+    const sources=(d.data_sources||[]).length?`<div class="source-note">데이터 구성 · ${(d.data_sources||[]).map(esc).join(" · ")}</div>`:"";
     const el=document.createElement("div");
-    el.className="card";
-    el.style.animationDelay=(idx*.1)+"s";
-    el.innerHTML=`
-      <div class="card-top">
-        <div>
-          <div class="stock"><span class="nm">${esc(d.name)}</span><span class="tk">${esc(d.ticker)}</span></div>
-          <div class="fit">${fit}</div>
-        </div>
-        <div class="score">
-          <div class="num">${conf}</div>
-          <div class="lab">신뢰도</div>
-          <div class="gauge"><i data-w="${conf}"></i></div>
-        </div>
-      </div>
-      <div class="why">
-        <div class="why-row"><div class="k">논문 근거</div><div class="v">${esc(w.paper_basis||"")}</div></div>
-        <div class="why-row"><div class="k">현재 상태</div><div class="v">${esc(w.current_status||"")}</div></div>
-        <div class="why-row"><div class="k">교차 검증</div><div class="v">${esc(w.match_summary||"")}</div></div>
-      </div>
-      ${matchHtml}
-      <div class="summary">${esc(d.simple_summary||"")}</div>
-      ${risks?`<div class="risk"><span class="rl">유의</span>${risks}</div>`:""}
-    `;
+    el.className="card"; el.style.animationDelay=(idx*.1)+"s";
+    el.innerHTML=`<div class="card-top"><div><div class="stock"><span class="nm">${esc(d.name)}</span><span class="tk">${esc(d.ticker)}</span></div><div class="fit">${fit}</div></div>${scoreHtml}</div>
+      <div class="why"><div class="why-row"><div class="k">분석 근거</div><div class="v">${esc(w.paper_basis||"")}</div></div><div class="why-row"><div class="k">현재 상태</div><div class="v">${esc(w.current_status||"")}</div></div><div class="why-row"><div class="k">판정</div><div class="v">${esc(w.match_summary||"")}</div></div></div>
+      ${matchHtml}<div class="summary">${esc(d.simple_summary||"")}</div>${sources}${risks?`<div class="risk"><span class="rl">유의</span>${risks}</div>`:""}
+      <div class="card-actions"><button class="watch-btn ${isWatched(d.ticker)?'saved':''}" data-ticker="${esc(d.ticker)}">${isWatched(d.ticker)?'관심 종목 해제':'관심 종목 추가'}</button></div>`;
     box.appendChild(el);
   });
-  requestAnimationFrame(()=>{
-    document.querySelectorAll(".gauge i").forEach(i=>{i.style.width=i.dataset.w+"%";});
+  document.getElementById("stockSort").onchange=event=>{
+    const value=event.target.value, next=[...CURRENT_STOCK_RESULTS];
+    if(value==="score")next.sort((a,b)=>(b.recommendation_score||0)-(a.recommendation_score||0));
+    if(value==="confidence")next.sort((a,b)=>(b.confidence_score||0)-(a.confidence_score||0));
+    if(value==="name")next.sort((a,b)=>a.name.localeCompare(b.name,"ko"));
+    render(next,true); document.getElementById("stockSort").value=value;
+  };
+  document.getElementById("stockFilter").onchange=event=>{
+    const value=event.target.value;
+    let next=[...CURRENT_STOCK_RESULTS];
+    if(value==="matched")next=next.filter(item=>(item.match_results||[]).some(row=>row.is_match));
+    if(value==="watched")next=next.filter(item=>isWatched(item.ticker));
+    render(next,true);
+    if(document.getElementById("stockFilter"))document.getElementById("stockFilter").value=value;
+  };
+  document.getElementById("showWatchlist").onclick=()=>{
+    const saved=getWatchlist();
+    if(!saved.length){alert("저장된 관심 종목이 없습니다.");return;}
+    document.getElementById("q").value=saved.map(item=>item.name).join(" ");
+  };
+  box.querySelectorAll(".watch-btn").forEach(button=>button.onclick=()=>{
+    const item=list.find(row=>row.ticker===button.dataset.ticker);
+    if(!item)return; toggleWatch(item);
+    button.classList.toggle("saved",isWatched(item.ticker));
+    button.textContent=isWatched(item.ticker)?"관심 종목 해제":"관심 종목 추가";
+    document.getElementById("showWatchlist").textContent=`관심 종목 (${getWatchlist().length})`;
   });
+  requestAnimationFrame(()=>document.querySelectorAll(".gauge i").forEach(i=>{i.style.width=i.dataset.w+"%";}));
 }
 function renderStrategies(payload){
   CURRENT_DETAIL=null;
@@ -548,10 +872,21 @@ function renderStrategies(payload){
     warning.textContent=payload.coverage_warning;
     box.appendChild(warning);
   }
+  if(payload?.period?.end){
+    const dateNote=document.createElement("div");
+    dateNote.className="method";
+    dateNote.textContent=`백테스트 데이터 ${formatDate(payload.period.end)} 기준`;
+    box.appendChild(dateNote);
+  }
   if(!list.length){
     box.innerHTML+='<div class="empty">백테스트 결과가 아직 없습니다. 데이터 수집을 먼저 실행해 주세요.</div>';
     return;
   }
+  box.insertAdjacentHTML("beforeend",`<div class="result-tools">
+    <label>정렬 <select id="strategySort"><option value="default">기본순</option><option value="cagr">CAGR순</option><option value="mdd">낙폭 방어순</option><option value="sharpe">Sharpe순</option></select></label>
+    <label>위험 <select id="strategyRisk"><option value="all">전체</option><option value="low">안정형</option><option value="medium">중립형</option><option value="high">공격형</option></select></label>
+    <button id="compareStrategies">선택 전략 비교</button>
+  </div><div id="strategyCompareArea"></div>`);
   list.forEach((s,idx)=>{
     const m=s.metrics||{};
     const el=document.createElement("div");
@@ -566,6 +901,7 @@ function renderStrategies(payload){
         <div class="score"><div class="num">${num(m.sharpe)}</div><div class="lab">Sharpe</div></div>
       </div>
       <div class="summary">${esc(s.description||"")}</div>
+      ${Number(m.cagr)>40?'<div class="method warn">높은 CAGR입니다. 데이터 편향과 과최적화 가능성을 반드시 함께 확인하세요.</div>':""}
       <div class="metrics">
         ${metric("연환산 수익률",pct(m.cagr))}
         ${metric("최대 낙폭",pct(m.mdd))}
@@ -573,17 +909,49 @@ function renderStrategies(payload){
         ${metric(`${benchmarkName} 대비`,pct(s.excess_cagr))}
       </div>
       <button class="detail-btn" data-strategy-id="${esc(s.id)}">상세 분석</button>
+      <label class="detail-btn" style="display:inline-block;margin-left:7px"><input type="checkbox" class="strategy-compare-check" data-strategy-id="${esc(s.id)}" ${STRATEGY_COMPARE_IDS.has(s.id)?"checked":""}> 비교 선택</label>
     `;
     box.appendChild(el);
   });
   box.querySelectorAll(".detail-btn").forEach(button=>{
-    button.onclick=()=>openStrategyDetail(button.dataset.strategyId);
+    if(button.tagName==="BUTTON")button.onclick=()=>openStrategyDetail(button.dataset.strategyId);
   });
+  box.querySelectorAll(".strategy-compare-check").forEach(check=>check.onchange=()=>{
+    if(check.checked&&STRATEGY_COMPARE_IDS.size>=3){check.checked=false;alert("전략 비교는 최대 3개까지 가능합니다.");return;}
+    if(check.checked)STRATEGY_COMPARE_IDS.add(check.dataset.strategyId);
+    else STRATEGY_COMPARE_IDS.delete(check.dataset.strategyId);
+  });
+  document.getElementById("compareStrategies").onclick=()=>{
+    const selected=list.filter(item=>STRATEGY_COMPARE_IDS.has(item.id));
+    const area=document.getElementById("strategyCompareArea");
+    if(selected.length<2){area.innerHTML='<div class="method">비교할 전략을 2개 이상 선택하세요.</div>';return;}
+    area.innerHTML=`<table class="compare-table"><thead><tr><th>전략</th><th>CAGR</th><th>MDD</th><th>Sharpe</th><th>변동성</th></tr></thead><tbody>${selected.map(item=>`<tr><td>${esc(item.name)}</td><td>${pct(item.metrics?.cagr)}</td><td>${pct(item.metrics?.mdd)}</td><td>${num(item.metrics?.sharpe)}</td><td>${pct(item.metrics?.volatility)}</td></tr>`).join("")}</tbody></table>`;
+  };
+  document.getElementById("strategySort").onchange=event=>{
+    const value=event.target.value;
+    const next={...payload,strategies:[...list]};
+    if(value==="cagr")next.strategies.sort((a,b)=>(b.metrics?.cagr||0)-(a.metrics?.cagr||0));
+    if(value==="mdd")next.strategies.sort((a,b)=>(b.metrics?.mdd||-999)-(a.metrics?.mdd||-999));
+    if(value==="sharpe")next.strategies.sort((a,b)=>(b.metrics?.sharpe||0)-(a.metrics?.sharpe||0));
+    renderStrategies(next); document.getElementById("strategySort").value=value;
+  };
+  document.getElementById("strategyRisk").onchange=event=>{
+    const value=event.target.value;
+    const next={...payload,strategies:value==="all"?[...list]:list.filter(item=>item.risk_level===value)};
+    renderStrategies(next);
+    if(document.getElementById("strategyRisk"))document.getElementById("strategyRisk").value=value;
+  };
 }
 function renderEtfs(payload){
   const box=document.getElementById("results");
   const list=payload?.etfs||[];
   box.innerHTML="";
+  if(payload?.generated_at){
+    const dateNote=document.createElement("div");
+    dateNote.className="method";
+    dateNote.textContent=`ETF 데이터 ${formatDate(payload.generated_at)} 기준`;
+    box.appendChild(dateNote);
+  }
   if((payload?.limitations||[]).length){
     const note=document.createElement("div");
     note.className="method";
@@ -591,10 +959,16 @@ function renderEtfs(payload){
     box.appendChild(note);
   }
   if(!list.length){
-    box.innerHTML+='<div class="empty">ETF 스냅샷이 없습니다. ETF 데이터 수집을 먼저 실행해 주세요.</div>';
+    box.innerHTML+='<div class="empty">조건에 맞는 ETF가 없습니다.<br><small>테마를 넓히거나 “KODEX 200”, “미국 ETF”, “채권 ETF”처럼 검색해 보세요.</small></div>';
     return;
   }
+  if(payload?.search_type==="direct_with_similar"){
+    box.insertAdjacentHTML("beforeend",'<div class="result-type"><b>ETF 직접 검색 + 유사 ETF</b><span>검색한 ETF와 같은 카테고리의 비교 후보입니다.</span></div>');
+  }
   list.forEach((e,idx)=>{
+    if(payload?.search_type==="direct_with_similar"&&(idx===0||idx===1)){
+      box.insertAdjacentHTML("beforeend",`<div class="result-section">${idx===0?"검색한 ETF":"비슷한 ETF"}</div>`);
+    }
     const el=document.createElement("div");
     el.className="card";
     el.style.animationDelay=(idx*.1)+"s";
@@ -604,7 +978,7 @@ function renderEtfs(payload){
           <div class="stock"><span class="nm">${esc(e.name)}</span><span class="tk">${esc(e.ticker)}</span></div>
           <div class="fit"><span>${esc(e.category||"ETF")}</span>${(e.reasons||[]).slice(0,3).map(x=>`<span>${esc(x)}</span>`).join("")}</div>
         </div>
-        <div class="score"><div class="num">${num(e.recommendation_score)}</div><div class="lab">ETF 점수</div></div>
+        <div class="score"><div class="num">${payload?.search_type==="direct_with_similar"?(idx===0?"조회":"비교"):num(e.recommendation_score)}</div><div class="lab">${payload?.search_type==="direct_with_similar"?(idx===0?"검색한 ETF":"유사 ETF"):"ETF 점수"}</div></div>
       </div>
       <div class="metrics">
         ${metric("1년 수익률",pct(e.return_1y))}
@@ -619,6 +993,10 @@ function renderEtfs(payload){
   });
 }
 function metric(k,v){return `<div class="metric"><div class="mk">${k}</div><div class="mv">${v}</div></div>`}
+function formatDate(value){
+  const date=new Date(value);
+  return Number.isNaN(date.getTime())?String(value):date.toLocaleDateString("ko-KR");
+}
 function pct(v){return v==null||v===""?"-":`${num(v)}%`}
 function num(v){const n=Number(v);return Number.isFinite(n)?n.toFixed(2):"-"}
 function formatAmount(v){const n=Number(v);if(!Number.isFinite(n))return "-";return n>=10000?(n/10000).toFixed(1)+"만":Math.round(n).toLocaleString()}
@@ -670,6 +1048,7 @@ function renderStrategyDetail(strategy,payload,assetType){
       <div class="score"><div class="num">${num(m.sharpe)}</div><div class="lab">Sharpe</div></div>
     </div>
     <div class="summary">${esc(strategy.description||"")}</div>
+    ${Number(m.cagr)>40?'<div class="method warn">높은 CAGR입니다. 데이터 편향, 생존편향, 과최적화 가능성을 함께 확인하세요.</div>':""}
     <div class="metrics">
       ${metric("CAGR",pct(m.cagr))}
       ${metric("누적 수익률",pct(m.cumulative_return))}
@@ -842,6 +1221,16 @@ function fmtVal(v){if(v==null||v==="-")return "-";return typeof v==="number"?(Nu
 
 checkConn();
 window.addEventListener("hashchange",handleStrategyHash);
+window.addEventListener("beforeunload",saveViewState);
+window.addEventListener("popstate",event=>{
+  const mode=event.state?.mode||"stock";
+  MODE=mode;
+  document.querySelectorAll(".mode-tab").forEach(tab=>tab.classList.toggle("active",tab.dataset.mode===mode));
+  const strategy=mode==="strategy"||mode==="etf_strategy",etf=mode==="etf";
+  document.getElementById("askLabel").textContent=strategy?"어떤 투자 전략을 찾고 있나요?":etf?"어떤 ETF를 찾고 있나요?":"어떤 주식을 찾고 있나요?";
+  renderChips(mode==="etf"?etfExamples:mode==="etf_strategy"?etfStrategyExamples:strategy?strategyExamples:examples);
+  if(!location.hash&&mode==="stock"&&CURRENT_STOCK_RESULTS.length)render(CURRENT_STOCK_RESULTS,true);
+});
 let resizeTimer;
 window.addEventListener("resize",()=>{
   if(!CURRENT_DETAIL)return;
@@ -853,6 +1242,20 @@ window.addEventListener("resize",()=>{
   },120);
 });
 if(location.hash.startsWith("#strategy="))handleStrategyHash();
+else{
+  try{
+    const saved=JSON.parse(sessionStorage.getItem("quantra_view")||"null");
+    if(saved?.mode&&document.querySelector(`.mode-tab[data-mode="${saved.mode}"]`)){
+      MODE=saved.mode;
+      document.querySelectorAll(".mode-tab").forEach(tab=>tab.classList.toggle("active",tab.dataset.mode===MODE));
+      const strategy=MODE==="strategy"||MODE==="etf_strategy",etf=MODE==="etf";
+      document.getElementById("askLabel").textContent=strategy?"어떤 투자 전략을 찾고 있나요?":etf?"어떤 ETF를 찾고 있나요?":"어떤 주식을 찾고 있나요?";
+      renderChips(MODE==="etf"?etfExamples:MODE==="etf_strategy"?etfStrategyExamples:strategy?strategyExamples:examples);
+    }
+    if(saved?.query)document.getElementById("q").value=saved.query;
+    if(saved?.scrollY)setTimeout(()=>window.scrollTo(0,saved.scrollY),0);
+  }catch(e){}
+}
 </script>
 </body>
 </html>

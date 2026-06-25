@@ -23,12 +23,15 @@ import argparse
 import logging
 from datetime import datetime, timedelta
 
+import FinanceDataReader as fdr
+
 # 루트 경로 보장
 sys.path.insert(0, os.getcwd())
 
 from pykrx import stock
 from data_pipeline.collectors.krx import KrxCollector
 from shared.schemas.financial import FinancialRawData
+from shared.constants.stocks import STOCK_CATALOG
 from shared.utils.normalizer import (
     normalize_krx_response,
     normalize_krx_fundamental,
@@ -67,9 +70,45 @@ def pick_top_tickers(date_str: str, top_n: int) -> list[tuple[str, str]]:
     return result
 
 
+def pick_catalog_tickers(limit: int | None = None) -> list[tuple[str, str]]:
+    pairs = list(STOCK_CATALOG.items())
+    return pairs[:limit] if limit else pairs
+
+
+def historical_metrics(ticker: str, date_str: str) -> dict:
+    end = datetime.strptime(date_str, "%Y%m%d")
+    start = end - timedelta(days=500)
+    frame = fdr.DataReader(ticker, start.date().isoformat(), end.date().isoformat())
+    if frame.empty or "Close" not in frame:
+        return {}
+    close = frame["Close"].astype(float).dropna()
+    returns = close.pct_change(fill_method=None).dropna()
+
+    def momentum(days: int):
+        if len(close) <= days:
+            return None
+        return round((close.iloc[-1] / close.iloc[-days - 1] - 1) * 100, 2)
+
+    return {
+        "price": round(float(close.iloc[-1]), 2),
+        "momentum_1m": momentum(21),
+        "momentum_3m": momentum(63),
+        "momentum_6m": momentum(126),
+        "momentum_1y": momentum(252),
+        "volatility": (
+            round(returns.tail(252).std(ddof=0) * (252 ** 0.5) * 100, 2)
+            if len(returns) >= 20 else None
+        ),
+    }
+
+
 async def build_one(collector: KrxCollector, date_str: str, ticker: str, name: str):
     """단일 종목 → FinancialRawData (시세+펀더멘털 병합)."""
-    base = FinancialRawData(ticker=ticker, name=name, data_date=datetime.now())
+    base = FinancialRawData(
+        ticker=ticker,
+        name=name,
+        data_date=datetime.strptime(date_str, "%Y%m%d"),
+    )
 
     price_raw = await collector.fetch_ticker_data(date_str, ticker)
     if price_raw:
@@ -79,15 +118,23 @@ async def build_one(collector: KrxCollector, date_str: str, ticker: str, name: s
     if fund_raw:
         base = merge_financial_data(base, normalize_krx_fundamental(fund_raw, ticker))
 
+    history = await asyncio.to_thread(historical_metrics, ticker, date_str)
+    if history:
+        base = merge_financial_data(base, history)
+
     base.data_completeness = base.compute_completeness()
     return base
 
 
-async def run(top_n: int, date_str: str):
-    logger.info(f"[Financial] 수집 시작 — 기준일 {date_str}, 상위 {top_n}종목")
+async def run(top_n: int, date_str: str, use_catalog: bool = True):
+    target_label = f"공통 카탈로그 {top_n}종목" if use_catalog else f"시총 상위 {top_n}종목"
+    logger.info(f"[Financial] 수집 시작 — 기준일 {date_str}, {target_label}")
     collector = KrxCollector()
 
-    pairs = await asyncio.to_thread(pick_top_tickers, date_str, top_n)
+    if use_catalog:
+        pairs = pick_catalog_tickers(top_n)
+    else:
+        pairs = await asyncio.to_thread(pick_top_tickers, date_str, top_n)
     logger.info(f"[Financial] 대상 종목 {len(pairs)}개 선정 완료")
 
     results: list[FinancialRawData] = []
@@ -105,6 +152,12 @@ async def run(top_n: int, date_str: str):
         "date": date_str,
         "generated_at": datetime.now().isoformat(),
         "count": len(results),
+        "universe": "shared.constants.stocks.STOCK_CATALOG" if use_catalog else "market_cap_top",
+        "data_sources": ["FinanceDataReader price history", "pykrx fundamentals when available"],
+        "limitations": [
+            "KRX 인증 또는 응답 장애 시 PBR·PER·배당·시가총액은 비어 있을 수 있습니다.",
+            "DART 기반 ROE·부채비율은 DART 기업코드 연결 전까지 제공되지 않습니다.",
+        ],
         "stocks": [r.model_dump(mode="json") for r in results],
     }
     with open(OUT_PATH, "w", encoding="utf-8") as f:
@@ -118,9 +171,10 @@ async def run(top_n: int, date_str: str):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--top", type=int, default=50, help="시총 상위 N종목")
+    ap.add_argument("--top", type=int, default=48, help="수집할 종목 수")
     ap.add_argument("--date", type=str, default=None, help="기준일 YYYYMMDD (생략시 최근 영업일)")
+    ap.add_argument("--market-cap-top", action="store_true", help="공통 카탈로그 대신 시총 상위 종목 수집")
     args = ap.parse_args()
 
     date_str = args.date or _latest_business_day()
-    asyncio.run(run(args.top, date_str))
+    asyncio.run(run(args.top, date_str, use_catalog=not args.market_cap_top))

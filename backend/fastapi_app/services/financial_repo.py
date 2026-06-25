@@ -3,6 +3,7 @@ import json
 import logging
 from typing import List
 from shared.schemas.financial import FinancialRawData
+from shared.constants.stocks import STOCK_CATALOG
 
 logger = logging.getLogger(__name__)
 
@@ -35,11 +36,12 @@ class MockFinancialRepo:
             ("034730", "SK",        0.8,  9.0,  9.0, 3.2, 120.0,  4.0,  110000),
             ("003550", "LG",        0.7,  8.0,  8.0, 4.0,  30.0,  3.0,   90000),
             ("066570", "LG전자",     0.9, 10.0,  9.2, 2.0,  85.0,  6.0,   95000),
-            ("086790", "하나금융",   0.4,  5.0, 10.5, 6.8, 850.0,  5.0,  170000),
-            ("316140", "우리금융",   0.4,  5.0,  9.8, 7.0, 880.0,  3.0,  100000),
+            ("086790", "하나금융지주", 0.4, 5.0, 10.5, 6.8, 850.0, 5.0, 170000),
+            ("316140", "우리금융지주", 0.4, 5.0,  9.8, 7.0, 880.0, 3.0, 100000),
             ("259960", "크래프톤",   2.8, 22.0, 16.0, 0.0,  20.0, 18.0,  130000),
         ]
         result = []
+        populated_tickers = set()
         for (t, n, pbr, per, roe, dy, dr, mo, mc) in rows:
             # 실데이터 스냅샷이 없을 때도 다중 팩터 로직을 검증할 수 있도록
             # 서로 일관된 범위의 데모 지표를 파생한다.
@@ -65,6 +67,16 @@ class MockFinancialRepo:
             )
             row.data_completeness = row.compute_completeness()
             result.append(row)
+            populated_tickers.add(t)
+
+        for ticker, name in STOCK_CATALOG.items():
+            if ticker in populated_tickers:
+                continue
+            result.append(FinancialRawData(
+                ticker=ticker,
+                name=name,
+                data_completeness=0.0,
+            ))
         return result
 
 
@@ -88,7 +100,23 @@ class JsonFinancialRepo:
             stocks = payload.get("stocks", [])
             if not stocks:
                 raise ValueError("빈 스냅샷")
-            result = [FinancialRawData(**s) for s in stocks]
+            fallback_rows = await self._fallback.get_all_stocks()
+            fallback_by_ticker = {
+                row.ticker: row.model_dump()
+                for row in fallback_rows
+            }
+            result = []
+            for snapshot_row in stocks:
+                ticker = str(snapshot_row.get("ticker", "")).zfill(6)
+                merged = fallback_by_ticker.get(ticker, {}).copy()
+                merged.update({
+                    key: value
+                    for key, value in snapshot_row.items()
+                    if value is not None
+                })
+                row = FinancialRawData(**merged)
+                row.data_completeness = row.compute_completeness()
+                result.append(row)
             logger.info(f"✅ [FinancialRepo] 실수집 데이터 {len(result)}종목 로드 ({payload.get('date')})")
             return result
         except Exception as e:

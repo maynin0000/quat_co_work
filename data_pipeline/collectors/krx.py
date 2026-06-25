@@ -10,23 +10,38 @@ class KrxCollector:
     def __init__(self):
         """메모리 캐싱을 통해 KRX 서버 부하 방지 및 성능 최적화"""
         self.market_cache: Dict[str, Any] = {}
+        self.failed_dates: set[str] = set()
 
     def _get_market_data(self, date_str: str) -> Dict[str, Any]:
         """[동기] pykrx를 사용하여 특정 날짜의 시세 및 펀더멘털 데이터 로드"""
         if date_str not in self.market_cache:
+            if date_str in self.failed_dates:
+                return {
+                    "df": pd.DataFrame(),
+                    "df_fund": pd.DataFrame(),
+                    "kospi": set(),
+                    "kosdaq": set(),
+                }
             logger.info(f"🔄 [KRX] {date_str} 기준 전체 시장 데이터 및 펀더멘털 로드...")
-            
-            # 1. 시세 및 시총 데이터
-            df_cap = stock.get_market_cap(date_str)
-            
-            # 2. 시장별 티커 리스트
-            kospi = set(stock.get_market_ticker_list(date_str, market="KOSPI"))
-            kosdaq = set(stock.get_market_ticker_list(date_str, market="KOSDAQ"))
-            
-            # 3. 펀더멘털 데이터 (PBR, PER, DIV) 수집 및 병합
-            df_f_kospi = stock.get_market_fundamental(date_str, market="KOSPI")
-            df_f_kosdaq = stock.get_market_fundamental(date_str, market="KOSDAQ")
-            df_fund = pd.concat([df_f_kospi, df_f_kosdaq])
+            try:
+                df_cap = stock.get_market_cap(date_str)
+                required = {"종가", "시가총액"}
+                if df_cap.empty or not required.issubset(df_cap.columns):
+                    raise RuntimeError("KRX 시세 응답이 비어 있거나 필수 컬럼이 없습니다.")
+                kospi = set(stock.get_market_ticker_list(date_str, market="KOSPI"))
+                kosdaq = set(stock.get_market_ticker_list(date_str, market="KOSDAQ"))
+                df_f_kospi = stock.get_market_fundamental(date_str, market="KOSPI")
+                df_f_kosdaq = stock.get_market_fundamental(date_str, market="KOSDAQ")
+                df_fund = pd.concat([df_f_kospi, df_f_kosdaq])
+            except Exception as exc:
+                self.failed_dates.add(date_str)
+                logger.warning("[KRX] %s 수집 불가, 가격 이력 데이터만 사용: %s", date_str, exc)
+                return {
+                    "df": pd.DataFrame(),
+                    "df_fund": pd.DataFrame(),
+                    "kospi": set(),
+                    "kosdaq": set(),
+                }
             
             # 메모리 캐시에 한 번에 저장
             self.market_cache[date_str] = {
@@ -51,7 +66,8 @@ class KrxCollector:
     def _sync_fetch(self, date_str: str, ticker: str) -> Optional[Dict[str, Any]]:
         cache = self._get_market_data(date_str)
         df = cache["df"]
-        
+        if df.empty:
+            return None
         if ticker not in df.index:
             return None
 
@@ -78,7 +94,8 @@ class KrxCollector:
     def _sync_fetch_fundamental(self, date_str: str, ticker: str) -> Optional[Dict[str, Any]]:
         cache = self._get_market_data(date_str)
         df_fund = cache["df_fund"]
-        
+        if df_fund.empty:
+            return None
         if ticker not in df_fund.index:
             return None
             
